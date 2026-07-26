@@ -228,7 +228,7 @@ class TestStreamChunkConvenience:
 
     def test_content_none(self):
         chunk = StreamChunk(choices=None)
-        assert chunk.content is None
+        assert chunk.content == ""
 
     def test_reasoning(self):
         chunk = StreamChunk(choices=[ChunkChoice(delta=ChoiceDelta(reasoning="Thinking..."))])
@@ -236,7 +236,7 @@ class TestStreamChunkConvenience:
 
     def test_reasoning_none(self):
         chunk = StreamChunk(choices=[ChunkChoice(delta=ChoiceDelta(content="Hello"))])
-        assert chunk.reasoning is None
+        assert chunk.reasoning == ""
 
     def test_finish_reason(self):
         chunk = StreamChunk(choices=[ChunkChoice(delta=ChoiceDelta(), finish_reason="stop")])

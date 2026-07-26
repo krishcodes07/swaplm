@@ -257,8 +257,8 @@ Each yielded chunk during streaming. Provides convenience properties that proxy 
 
 | Property | Type | Description |
 |---|---|---|
-| `content` | `str \| None` | Incremental text content |
-| `reasoning` | `str \| None` | Incremental reasoning/thinking content |
+| `content` | `str` | Incremental text content (empty string if none) |
+| `reasoning` | `str` | Incremental reasoning/thinking content (empty string if none) |
 | `tool_calls` | `list[ToolCallDelta] \| None` | Incremental tool call data |
 | `finish_reason` | `str \| None` | `"stop"`, `"length"`, `"tool_calls"`, etc. |
 

@@ -48,18 +48,18 @@ class StreamChunk(BaseModel):
     # ── Convenience properties ────────────────────────────────────────
 
     @property
-    def content(self) -> str | None:
+    def content(self) -> str:
         """Shortcut: incremental text content from the first choice's delta."""
         if self.choices:
-            return self.choices[0].delta.content
-        return None
+            return self.choices[0].delta.content or ""
+        return ""
 
     @property
-    def reasoning(self) -> str | None:
+    def reasoning(self) -> str:
         """Shortcut: incremental reasoning content from the first choice's delta."""
         if self.choices:
-            return self.choices[0].delta.reasoning
-        return None
+            return self.choices[0].delta.reasoning or ""
+        return ""
 
     @property
     def tool_calls(self) -> list[ToolCallDelta] | None:
