@@ -41,6 +41,7 @@ classifiers = [
 
 dependencies = [
   "pydantic>=2.11",
+  "httpx>=0.27.0",
 ]
 
 [project.optional-dependencies]
@@ -100,3 +101,5 @@ docstring-code-format = true
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-v --tb=short"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
