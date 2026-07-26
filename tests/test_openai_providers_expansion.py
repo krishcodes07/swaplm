@@ -12,7 +12,6 @@ ALL_EXPECTED_PROVIDERS = [
     "google",
     "openai",
     "openrouter",
-    "together",
     "github",
     "nvidia",
     "cerebras",
@@ -57,21 +56,21 @@ class TestProviderExpansion:
         from swaplm.router.router import Router
 
         router = Router()
-        # 'gpt-4o' exists in openai and github providers
+        # 'gpt-oss-120b' exists in openai, cerebras, and sambanova providers
         with pytest.raises(AmbiguousModelError) as exc_info:
-            router.resolve("gpt-4o")
+            router.resolve("gpt-oss-120b")
 
         assert "openai" in exc_info.value.matching_providers
-        assert "github" in exc_info.value.matching_providers
+        assert "sambanova" in exc_info.value.matching_providers
 
     def test_explicit_routing_bypasses_ambiguity(self):
         from swaplm.router.router import Router
 
         router = Router()
-        p_obj, m_id = router.resolve("openai/gpt-4o")
+        p_obj, m_id = router.resolve("openai/gpt-5.6-sol")
         assert p_obj.info.id == "openai"
-        assert m_id == "gpt-4o"
+        assert m_id == "gpt-5.6-sol"
 
-        p_obj_gh, m_id_gh = router.resolve("github/gpt-4o")
+        p_obj_gh, m_id_gh = router.resolve("github/phi-4")
         assert p_obj_gh.info.id == "github"
-        assert m_id_gh == "gpt-4o"
+        assert m_id_gh == "phi-4"

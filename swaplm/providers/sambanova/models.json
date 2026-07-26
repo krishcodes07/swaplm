@@ -1,10 +1,38 @@
 [
   {
+    "id": "DeepSeek-V3.1",
+    "display_name": "DeepSeek V3.1 (SambaNova)",
+    "type": "chat",
+    "context_window": 131072,
+    "max_tokens": 7168,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true,
+    "supports_thinking": true
+  },
+  {
+    "id": "DeepSeek-V3.2",
+    "display_name": "DeepSeek V3.2 (SambaNova)",
+    "type": "chat",
+    "context_window": 32768,
+    "max_tokens": 7168,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true,
+    "supports_thinking": true
+  },
+  {
     "id": "Meta-Llama-3.3-70B-Instruct",
     "display_name": "Llama 3.3 70B Instruct (SambaNova)",
     "type": "chat",
-    "context_window": 128000,
-    "max_tokens": 4096,
+    "context_window": 131072,
+    "max_tokens": 3072,
     "supports_streaming": true,
     "supports_tool_calling": true,
     "supports_structured_output": true,
@@ -13,11 +41,11 @@
     "supports_system_message": true
   },
   {
-    "id": "Meta-Llama-3.1-405B-Instruct",
-    "display_name": "Llama 3.1 405B Instruct (SambaNova)",
+    "id": "MiniMax-M2.7",
+    "display_name": "MiniMax M2.7 (SambaNova)",
     "type": "chat",
-    "context_window": 128000,
-    "max_tokens": 4096,
+    "context_window": 196608,
+    "max_tokens": 196608,
     "supports_streaming": true,
     "supports_tool_calling": true,
     "supports_structured_output": true,
@@ -26,11 +54,11 @@
     "supports_system_message": true
   },
   {
-    "id": "Qwen2.5-72B-Instruct",
-    "display_name": "Qwen 2.5 72B Instruct (SambaNova)",
+    "id": "gemma-4-31B-it",
+    "display_name": "Gemma 4 31B IT (SambaNova)",
     "type": "chat",
-    "context_window": 32768,
-    "max_tokens": 4096,
+    "context_window": 131072,
+    "max_tokens": 131072,
     "supports_streaming": true,
     "supports_tool_calling": true,
     "supports_structured_output": true,
@@ -39,16 +67,17 @@
     "supports_system_message": true
   },
   {
-    "id": "DeepSeek-R1",
-    "display_name": "DeepSeek R1 (SambaNova)",
+    "id": "gpt-oss-120b",
+    "display_name": "OpenAI GPT OSS 120B (SambaNova)",
     "type": "chat",
-    "context_window": 16384,
-    "max_tokens": 4096,
+    "context_window": 131072,
+    "max_tokens": 131072,
     "supports_streaming": true,
-    "supports_tool_calling": false,
-    "supports_structured_output": false,
-    "supports_thinking": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
     "supports_temperature": true,
-    "supports_system_message": true
+    "supports_system_message": true,
+    "supports_thinking": true
   }
 ]

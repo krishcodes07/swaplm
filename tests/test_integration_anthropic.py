@@ -47,7 +47,7 @@ class TestAnthropicIntegration:
                     "id": "msg_123",
                     "type": "message",
                     "role": "assistant",
-                    "model": "claude-3-5-sonnet-20241022",
+                    "model": "claude-sonnet-5",
                     "content": [{"type": "text", "text": "Hello from Claude!"}],
                     "stop_reason": "end_turn",
                     "usage": {"input_tokens": 10, "output_tokens": 15},
@@ -58,7 +58,7 @@ class TestAnthropicIntegration:
         monkeypatch.setattr("swaplm._client._default_client", client)
 
         response = chat(
-            model="anthropic/claude-3-5-sonnet-20241022",
+            model="anthropic/claude-sonnet-5",
             messages=[
                 {"role": "system", "content": "Be concise."},
                 {"role": "user", "content": "Hi"},
@@ -81,7 +81,7 @@ class TestAnthropicIntegration:
 
     def test_streaming_chat(self, monkeypatch):
         sse_lines = [
-            'data: {"type":"message_start","message":{"id":"msg_1","model":"claude-3-5-sonnet-20241022"}}\n\n',
+            'data: {"type":"message_start","message":{"id":"msg_1","model":"claude-sonnet-5"}}\n\n',
             'data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Hello"}}\n\n',
             'data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":" world!"}}\n\n',
             'data: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":5}}\n\n',
@@ -94,7 +94,7 @@ class TestAnthropicIntegration:
         monkeypatch.setattr("swaplm._client._default_client", client)
 
         response = chat(
-            model="anthropic/claude-3-5-sonnet-20241022",
+            model="anthropic/claude-sonnet-5",
             messages=[{"role": "user", "content": "Hi"}],
             api_key="sk-ant-mock_key",
             stream=True,
@@ -124,7 +124,7 @@ class TestAnthropicIntegration:
         monkeypatch.setattr("swaplm._client._default_client", client)
 
         chat(
-            model="anthropic/claude-3-5-sonnet-20241022",
+            model="anthropic/claude-sonnet-5",
             messages=[{"role": "user", "content": "Hi"}],
         )
 
@@ -144,7 +144,7 @@ class TestAnthropicIntegration:
                     "id": "msg_tc",
                     "type": "message",
                     "role": "assistant",
-                    "model": "claude-3-5-sonnet-20241022",
+                    "model": "claude-sonnet-5",
                     "content": [
                         {
                             "type": "tool_use",
@@ -176,7 +176,7 @@ class TestAnthropicIntegration:
         )
 
         response = chat(
-            model="anthropic/claude-3-5-sonnet-20241022",
+            model="anthropic/claude-sonnet-5",
             messages=[{"role": "user", "content": "Stock price of AAPL?"}],
             api_key="sk-ant-mock_key",
             tools=[stock_tool],
@@ -201,9 +201,9 @@ class TestAnthropicIntegration:
 
         with pytest.raises(AuthenticationError) as exc_info:
             chat(
-                model="anthropic/claude-3-5-sonnet-20241022",
+                model="anthropic/claude-sonnet-5",
                 messages=[{"role": "user", "content": "Hi"}],
-                api_key="bad_key",
+                api_key="sk-ant-invalid_key",
             )
         assert exc_info.value.provider == "anthropic"
 

@@ -29,7 +29,7 @@ response = await achat(model="openai/gpt-4o", messages=[{"role": "user", "conten
 
 ---
 
-## Provider Capability Matrix (17 Supported Providers)
+## Provider Capability Matrix (16 Supported Providers)
 
 | Provider | Slug | Protocol | Default Env Var | Free Tier | Streaming | Tool Calling | Structured Output | Reasoning |
 |---|---|---|---|:---:|:---:|:---:|:---:|:---:|
@@ -38,7 +38,6 @@ response = await achat(model="openai/gpt-4o", messages=[{"role": "user", "conten
 | **Google Gemini** | `google` | Google | `GEMINI_API_KEY` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **OpenAI** | `openai` | OpenAI | `OPENAI_API_KEY` | ❌ | ✅ | ✅ | ✅ | ✅ |
 | **OpenRouter** | `openrouter` | OpenAI | `OPENROUTER_API_KEY` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Together AI** | `together` | OpenAI | `TOGETHER_API_KEY` | ❌ | ✅ | ✅ | ✅ | ✅ |
 | **GitHub Models** | `github` | OpenAI | `GITHUB_TOKEN` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **NVIDIA NIM** | `nvidia` | OpenAI | `NVIDIA_API_KEY` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Cerebras** | `cerebras` | OpenAI | `CEREBRAS_API_KEY` | ✅ | ✅ | ✅ | ✅ | ❌ |
@@ -49,13 +48,13 @@ response = await achat(model="openai/gpt-4o", messages=[{"role": "user", "conten
 | **Fireworks AI** | `fireworks` | OpenAI | `FIREWORKS_API_KEY` | ❌ | ✅ | ✅ | ✅ | ✅ |
 | **Cloudflare** | `cloudflare` | OpenAI | `CLOUDFLARE_API_KEY` | ✅ | ✅ | ✅ | ✅ | ❌ |
 | **Perplexity** | `perplexity` | OpenAI | `PERPLEXITY_API_KEY` | ❌ | ✅ | ❌ | ❌ | ✅ |
-| **Cohere** | `cohere` | OpenAI | `COHERE_API_KEY` | ❌ | ✅ | ✅ | ✅ | ❌ |
+| **Cohere** | `cohere` | OpenAI | `COHERE_API_KEY` | ✅ | ✅ | ✅ | ✅ | ❌ |
 
 ---
 
 ## Features
 
-- [x] 17 Production Provider Integrations (Groq, Anthropic, Gemini, OpenAI, OpenRouter, Together, GitHub, NVIDIA, Cerebras, SambaNova, Mistral, xAI, DeepInfra, Fireworks, Cloudflare, Perplexity, Cohere)
+- [x] 16 Production Provider Integrations (Groq, Anthropic, Gemini, OpenAI, OpenRouter, GitHub, NVIDIA, Cerebras, SambaNova, Mistral, xAI, DeepInfra, Fireworks, Cloudflare, Perplexity, Cohere)
 - [x] Zero-Code Provider Scaling via Metadata-Only Adapters
 - [x] Complete Async API (`achat()`) & Async Streaming (`async for chunk in stream:`)
 - [x] Configurable Transport Retries with Exponential Backoff (5xx, timeouts, 429 rate limits)

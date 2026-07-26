@@ -20,12 +20,12 @@ class TestAnthropicProvider:
         assert len(models) > 0
 
         model_ids = [m.id for m in models]
-        assert "claude-3-7-sonnet-20250219" in model_ids
-        assert "claude-3-5-sonnet-20241022" in model_ids
+        assert "claude-sonnet-5" in model_ids
+        assert "claude-fable-5" in model_ids
 
     def test_thinking_capability(self):
         provider = AnthropicProvider()
-        model_info = provider.get_model("claude-3-7-sonnet-20250219")
+        model_info = provider.get_model("claude-sonnet-5")
         assert model_info is not None
         assert model_info.supports_thinking is True
 

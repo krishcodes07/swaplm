@@ -1,41 +1,86 @@
 [
   {
-    "id": "grok-2-latest",
-    "display_name": "Grok 2",
+    "id": "grok-4.5",
+    "display_name": "xAI Grok 4.5",
     "type": "chat",
     "context_window": 131072,
-    "max_tokens": 8192,
+    "max_tokens": 16384,
     "supports_streaming": true,
     "supports_tool_calling": true,
     "supports_structured_output": true,
     "supports_json_mode": true,
     "supports_temperature": true,
-    "supports_system_message": true
+    "supports_system_message": true,
+    "supports_thinking": true
   },
   {
-    "id": "grok-2-vision-latest",
-    "display_name": "Grok 2 Vision",
+    "id": "grok-4.3",
+    "display_name": "xAI Grok 4.3",
     "type": "chat",
-    "context_window": 32768,
+    "context_window": 1048576,
     "max_tokens": 8192,
     "supports_streaming": true,
     "supports_tool_calling": true,
     "supports_structured_output": true,
     "supports_json_mode": true,
     "supports_temperature": true,
-    "supports_system_message": true
+    "supports_system_message": true,
+    "supports_thinking": true
   },
   {
-    "id": "grok-beta",
-    "display_name": "Grok Beta",
+    "id": "grok-4.20-multi-agent",
+    "display_name": "xAI Grok 4.20 Multi-Agent",
+    "type": "chat",
+    "context_window": 2097152,
+    "max_tokens": 8192,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true,
+    "supports_thinking": true
+  },
+  {
+    "id": "grok-build-0.1",
+    "display_name": "xAI Grok Build 0.1",
+    "type": "chat",
+    "context_window": 262144,
+    "max_tokens": 8192,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true,
+    "supports_thinking": true
+  },
+  {
+    "id": "grok-4.1-fast",
+    "display_name": "xAI Grok 4.1 Fast",
+    "type": "chat",
+    "context_window": 2097152,
+    "max_tokens": 8192,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true,
+    "supports_thinking": false
+  },
+  {
+    "id": "grok-3",
+    "display_name": "xAI Grok 3",
     "type": "chat",
     "context_window": 131072,
-    "max_tokens": 8192,
+    "max_tokens": 4096,
     "supports_streaming": true,
     "supports_tool_calling": true,
     "supports_structured_output": true,
     "supports_json_mode": true,
     "supports_temperature": true,
-    "supports_system_message": true
+    "supports_system_message": true,
+    "supports_thinking": false
   }
-]
+]   
