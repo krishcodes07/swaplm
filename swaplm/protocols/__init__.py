@@ -1,0 +1,1 @@
+"""Shared API protocol implementations."""

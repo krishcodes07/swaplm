@@ -1,21 +1,102 @@
 [project]
 name = "swaplm"
 version = "0.1.0"
-description = "Universal Python SDK for LLM providers."
+description = "Universal Python SDK for LLM providers. One interface, every model."
 readme = "README.md"
 requires-python = ">=3.10"
-
-authors = [
-    {name = "Krish"}
-]
-
 license = {text = "MIT"}
 
-dependencies = [
-    "httpx>=0.28",
-    "pydantic>=2.11"
+authors = [
+  {name = "Krish"},
 ]
+
+keywords = [
+  "llm",
+  "ai",
+  "openai",
+  "anthropic",
+  "gemini",
+  "sdk",
+  "unified",
+  "providers",
+  "chat",
+  "completions",
+]
+
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Typing :: Typed",
+]
+
+dependencies = [
+  "pydantic>=2.11",
+]
+
+[project.optional-dependencies]
+dev = [
+  "ruff>=0.12",
+  "pytest>=8.0",
+  "pytest-asyncio>=0.25",
+]
+
+[project.urls]
+Homepage = "https://github.com/krishcodes07/swaplm"
+Repository = "https://github.com/krishcodes07/swaplm"
+Issues = "https://github.com/krishcodes07/swaplm/issues"
+Changelog = "https://github.com/krishcodes07/swaplm/blob/main/CHANGELOG.md"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+# ---------------------------------------------------------------------------
+# Ruff
+# ---------------------------------------------------------------------------
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+  "E",    # pycodestyle errors
+  "W",    # pycodestyle warnings
+  "F",    # pyflakes
+  "I",    # isort (import sorting)
+  "N",    # pep8-naming
+  "UP",   # pyupgrade
+  "B",    # flake8-bugbear
+  "SIM",  # flake8-simplify
+  "RUF",  # ruff-specific rules
+]
+ignore = [
+  "E501",  # line too long — handled by formatter
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["swaplm"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+# ---------------------------------------------------------------------------
+# Pytest
+# ---------------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-v --tb=short"
