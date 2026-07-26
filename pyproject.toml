@@ -1,6 +1,6 @@
 [project]
 name = "swaplm"
-version = "0.1.0"
+version = "0.1.1"
 description = "Universal Python SDK for LLM providers. One interface, every model."
 readme = "README.md"
 requires-python = ">=3.10"
