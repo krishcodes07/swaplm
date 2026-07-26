@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.0] - 2026-07-26
+
+### Added
+- **Explicit Provider Routing**: New `provider` parameter for `chat()` and `achat()` — bypasses model-string parsing.
+- **Stream Convenience Properties**: `StreamChunk.content`, `StreamChunk.reasoning`, `StreamChunk.tool_calls`, `StreamChunk.finish_reason` — no more `chunk.choices[0].delta.content`.
+- **Stream Response Alias**: `StreamResponse.text` — alias for `accumulated_content` for brevity.
+- **Chat Response Reasoning**: `ChatResponse.reasoning` property — extracts reasoning from structured responses.
+- **ChoiceDelta Reasoning**: `ChoiceDelta.reasoning` field — supports reasoning traces from thinking models (Claude, DeepSeek, Qwen).
+- **Router.resolve_explicit()**: Dedicated routing path for explicit provider+model pairs.
+
+### Changed
+- Recommended API style: `chat(provider="groq", model="llama-3.3-70b-versatile")` over combined string.
+- Streaming examples: `chunk.content` replaces `chunk.choices[0].delta.content`.
+- All 7 example files updated to use explicit provider routing.
+
+---
+
 ## [0.1.0] - 2026-07-26
 
 ### Added

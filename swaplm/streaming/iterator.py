@@ -68,6 +68,11 @@ class StreamResponse:
         """Content accumulated from all received chunks."""
         return "".join(self._accumulated_content)
 
+    @property
+    def text(self) -> str:
+        """Alias for :attr:`accumulated_content`."""
+        return self.accumulated_content
+
     def _accumulate(self, chunk: StreamChunk) -> None:
         """Collect content deltas for post-stream access."""
         if chunk.choices:

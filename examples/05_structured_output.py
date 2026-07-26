@@ -17,7 +17,8 @@ class MovieRecommendation(BaseModel):
 def main():
     # Request structured JSON output conforming to a Pydantic schema
     response = chat(
-        model="openai/gpt-4o-mini",
+        provider="openai",
+        model="gpt-4o-mini",
         messages=[{"role": "user", "content": "Recommend a classic sci-fi movie."}],
         response_format={"type": "json_object"},
     )

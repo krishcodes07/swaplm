@@ -56,3 +56,18 @@ class ChatResponse(BaseModel):
         if self.choices:
             return self.choices[0].finish_reason
         return None
+
+    @property
+    def reasoning(self) -> str | None:
+        """Shortcut: reasoning/thinking content from the first choice's message.
+
+        Some providers return reasoning in a separate field. This property
+        checks ``message.refusal`` as a fallback. For providers that return
+        reasoning in ``content`` as a structured object, access it via
+        ``choices[0].message`` directly.
+        """
+        if self.choices:
+            msg = self.choices[0].message
+            if msg.refusal:
+                return msg.refusal
+        return None

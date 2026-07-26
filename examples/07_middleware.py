@@ -28,7 +28,8 @@ def main():
 
     # Chat execution automatically runs through registered middlewares
     response = chat(
-        model="groq/llama-3.3-70b-versatile",
+        provider="groq",
+        model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": "Hello!"}],
     )
 

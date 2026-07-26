@@ -6,7 +6,14 @@ Public API
 
     from swaplm import achat, chat
 
-    # Sync
+    # Sync — explicit provider
+    response = chat(
+        provider="groq",
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": "Hello!"}],
+    )
+
+    # Sync — combined model string (still supported)
     response = chat(
         model="groq/llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": "Hello!"}],
@@ -14,7 +21,8 @@ Public API
 
     # Async
     response = await achat(
-        model="anthropic/claude-3-5-sonnet-20241022",
+        provider="anthropic",
+        model="claude-sonnet-4-20250514",
         messages=[{"role": "user", "content": "Hello!"}],
     )
 """
@@ -62,6 +70,7 @@ def chat(
     *,
     model: str,
     messages: list[dict[str, Any] | Message],
+    provider: str | None = None,
     stream: bool = False,
     api_key: str | None = None,
     base_url: str | None = None,
@@ -92,6 +101,7 @@ def chat(
     request = ChatRequest(
         model=model,
         messages=normalised_messages,
+        provider=provider,
         stream=stream,
         api_key=api_key,
         base_url=base_url,
@@ -116,6 +126,7 @@ async def achat(
     *,
     model: str,
     messages: list[dict[str, Any] | Message],
+    provider: str | None = None,
     stream: bool = False,
     api_key: str | None = None,
     base_url: str | None = None,
@@ -146,6 +157,7 @@ async def achat(
     request = ChatRequest(
         model=model,
         messages=normalised_messages,
+        provider=provider,
         stream=stream,
         api_key=api_key,
         base_url=base_url,

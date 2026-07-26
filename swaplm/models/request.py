@@ -18,10 +18,15 @@ class ChatRequest(BaseModel):
 
     # ── Required ──────────────────────────────────────────────────────
     model: str
-    """Model identifier in ``"provider/model"`` format."""
+    """Model identifier. Format depends on whether ``provider`` is set."""
 
     messages: list[Message]
     """Conversation history."""
+
+    # ── Explicit provider (optional) ──────────────────────────────────
+    provider: str | None = Field(default=None, exclude=True)
+    """Explicit provider slug. When set, ``model`` is treated as a raw
+    model ID and routing bypasses model-string parsing."""
 
     # ── Generation parameters ─────────────────────────────────────────
     stream: bool = False
@@ -61,7 +66,13 @@ class ChatRequest(BaseModel):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def provider_id(self) -> str:
-        """Extract provider from ``"provider/model"`` string."""
+        """Extract provider ID.
+
+        When ``provider`` is set explicitly, returns it directly.
+        Otherwise parses from ``"provider/model"`` string.
+        """
+        if self.provider:
+            return self.provider
         if "/" in self.model:
             return self.model.split("/", 1)[0]
         return ""
@@ -69,7 +80,13 @@ class ChatRequest(BaseModel):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def model_id(self) -> str:
-        """Extract model name from ``"provider/model"`` string."""
+        """Extract model ID.
+
+        When ``provider`` is set explicitly, returns ``model`` as-is.
+        Otherwise parses from ``"provider/model"`` string.
+        """
+        if self.provider:
+            return self.model
         if "/" in self.model:
             return self.model.split("/", 1)[1]
         return self.model

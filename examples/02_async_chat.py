@@ -8,7 +8,8 @@ from swaplm import achat
 async def main():
     # Execute an async chat completion with OpenAI
     response = await achat(
-        model="openai/gpt-4o-mini",
+        provider="openai",
+        model="gpt-4o-mini",
         messages=[
             {"role": "user", "content": "What are three key benefits of asynchronous programming?"}
         ],

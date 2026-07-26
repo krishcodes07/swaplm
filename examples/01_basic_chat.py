@@ -6,7 +6,8 @@ from swaplm import chat
 def main():
     # Execute a simple chat completion with Groq
     response = chat(
-        model="groq/llama-3.3-70b-versatile",
+        provider="groq",
+        model="llama-3.3-70b-versatile",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": "Explain quantum computing in one sentence."},

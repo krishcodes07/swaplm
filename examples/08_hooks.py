@@ -17,7 +17,8 @@ def main():
     on("after_request", on_after_request)
 
     response = chat(
-        model="groq/llama-3.3-70b-versatile",
+        provider="groq",
+        model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": "What is Python?"}],
     )
 

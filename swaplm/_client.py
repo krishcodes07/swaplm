@@ -53,7 +53,10 @@ class _Client:
             emit("before_request", request)
 
             # Resolve routing & credentials
-            provider, model_id = self._router.resolve(request.model)
+            if request.provider:
+                provider, model_id = self._router.resolve_explicit(request.provider, request.model)
+            else:
+                provider, model_id = self._router.resolve(request.model)
             api_key = self._auth.resolve_api_key(provider, request.api_key)
             protocol = default_protocol_registry.get(provider.info.protocol)
             model_info = provider.get_model(model_id)
@@ -160,7 +163,10 @@ class _Client:
             await aemit("before_request", request)
 
             # Resolve routing & credentials
-            provider, model_id = self._router.resolve(request.model)
+            if request.provider:
+                provider, model_id = self._router.resolve_explicit(request.provider, request.model)
+            else:
+                provider, model_id = self._router.resolve(request.model)
             api_key = self._auth.resolve_api_key(provider, request.api_key)
             protocol = default_protocol_registry.get(provider.info.protocol)
             model_info = provider.get_model(model_id)

@@ -64,6 +64,23 @@ class Router:
         # ── 3. Alias Lookup ─────────────────────────────────────────
         return self._resolve_alias(model_string)
 
+    def resolve_explicit(self, provider_id: str, model_id: str) -> tuple[BaseProvider, str]:
+        """Resolve directly from an explicit provider ID and model ID.
+
+        Bypasses model-string parsing. Validates that the provider
+        exists and the model is valid for that provider.
+
+        Args:
+            provider_id: The provider slug (e.g. ``"groq"``).
+            model_id: The raw model identifier (e.g. ``"llama-3.3-70b-versatile"``).
+
+        Returns:
+            A tuple of ``(provider_instance, model_id)``.
+        """
+        provider = self._provider_registry.get(provider_id)
+        self._validate_model(provider, model_id)
+        return provider, model_id
+
     def _resolve_free_provider(self, model_id: str) -> tuple[BaseProvider, str]:
         """Search all registered providers for a free provider matching model_id."""
         registered_ids = self._provider_registry.list_providers()

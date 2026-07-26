@@ -27,7 +27,8 @@ def main():
     )
 
     response = chat(
-        model="groq/llama-3.3-70b-versatile",
+        provider="groq",
+        model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": "What is the weather in Tokyo?"}],
         tools=[weather_tool],
     )

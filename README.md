@@ -42,19 +42,22 @@ from swaplm import chat
 
 # Groq
 response = chat(
-    model="groq/llama-3.3-70b-versatile",
+    provider="groq",
+    model="llama-3.3-70b-versatile",
     messages=[{"role": "user", "content": "Hello!"}],
 )
 
 # OpenAI — same interface, different provider
 response = chat(
-    model="openai/gpt-4o",
+    provider="openai",
+    model="gpt-4o",
     messages=[{"role": "user", "content": "Hello!"}],
 )
 
 # Anthropic — still the same interface
 response = chat(
-    model="anthropic/claude-sonnet-4-20250514",
+    provider="anthropic",
+    model="claude-sonnet-4-20250514",
     messages=[{"role": "user", "content": "Hello!"}],
 )
 ```
@@ -102,7 +105,8 @@ export GROQ_API_KEY=gsk_...    # or any provider's env var
 from swaplm import chat
 
 response = chat(
-    model="groq/llama-3.3-70b-versatile",
+    provider="groq",
+    model="llama-3.3-70b-versatile",
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "What is the meaning of life?"},
@@ -123,7 +127,8 @@ from swaplm import achat
 
 async def main():
     response = await achat(
-        model="groq/llama-3.3-70b-versatile",
+        provider="groq",
+        model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": "Hello!"}],
     )
     print(response.content)
@@ -141,8 +146,9 @@ Both functions accept the same parameters (keyword-only). `achat()` is the async
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `model` | `str` | **required** | Model identifier in `"provider/model"` format (e.g., `"groq/llama-3.3-70b-versatile"`). |
+| `model` | `str` | **required** | Model identifier. When `provider` is set, this is the raw model ID. Otherwise `"provider/model"` format (e.g., `"groq/llama-3.3-70b-versatile"`). |
 | `messages` | `list[dict \| Message]` | **required** | Conversation history. Each dict needs `"role"` and `"content"`. |
+| `provider` | `str \| None` | `None` | Explicit provider slug (e.g., `"groq"`). When set, bypasses model-string parsing. |
 | `stream` | `bool` | `False` | If `True`, returns a `StreamResponse` that yields `StreamChunk` objects. |
 | `api_key` | `str \| None` | `None` | Explicit API key. Overrides the provider's environment variable. |
 | `base_url` | `str \| None` | `None` | Override the provider's default API base URL. |
@@ -161,14 +167,23 @@ Both functions accept the same parameters (keyword-only). `achat()` is the async
 
 ### Model String Format
 
+**Recommended** — explicit provider:
+
+```python
+chat(provider="groq", model="llama-3.3-70b-versatile")
 ```
-"provider/model_id"
+
+**Still supported** — combined model string:
+
+```python
+chat(model="groq/llama-3.3-70b-versatile")
 ```
 
 | Format | Example | Description |
 |---|---|---|
-| Explicit | `"groq/llama-3.3-70b-versatile"` | Routes directly to the named provider. |
-| Nested | `"openai/org/model-name"` | Handles provider/model IDs with slashes. |
+| Explicit provider | `provider="groq", model="llama-3.3-70b-versatile"` | Bypasses model-string parsing. Recommended. |
+| Combined string | `"groq/llama-3.3-70b-versatile"` | Routes directly to the named provider. |
+| Nested model ID | `provider="nvidia", model="deepseek-ai/deepseek-v4-flash"` | Handles model IDs with slashes cleanly. |
 | Alias | `"llama-3.3-70b-versatile"` | Searches all providers. Raises `AmbiguousModelError` if multiple match. |
 | Free tier | `"free/qwen-2.5-72b"` | Searches providers marked as free or requiring no API key. |
 
@@ -184,7 +199,8 @@ Returned by `chat()` / `achat()` when `stream=False`.
 from swaplm import chat
 
 response = chat(
-    model="groq/llama-3.3-70b-versatile",
+    provider="groq",
+    model="llama-3.3-70b-versatile",
     messages=[{"role": "user", "content": "Hi"}],
 )
 
@@ -192,6 +208,7 @@ response = chat(
 response.content          # str | None — text of first choice
 response.tool_calls       # list[ToolCall] | None — tool calls from first choice
 response.finish_reason    # str | None — "stop", "length", "tool_calls", etc.
+response.reasoning        # str | None — reasoning/thinking content (if present)
 
 # Full fields
 response.id               # str — unique response ID
@@ -213,34 +230,39 @@ Returned by `chat()` / `achat()` when `stream=True`.
 from swaplm import chat
 
 stream = chat(
-    model="groq/llama-3.3-70b-versatile",
+    provider="groq",
+    model="llama-3.3-70b-versatile",
     messages=[{"role": "user", "content": "Write a poem."}],
     stream=True,
 )
 
-# Sync iteration
+# Sync iteration — use convenience properties
 for chunk in stream:
-    if chunk.choices:
-        delta = chunk.choices[0].delta
-        if delta.content:
-            print(delta.content, end="", flush=True)
+    print(chunk.content, end="", flush=True)
 
-# Access accumulated content after iteration
-print(stream.accumulated_content)
+# Access full text after iteration
+print(stream.text)              # alias for accumulated_content
+print(stream.accumulated_content)  # same thing
 ```
 
 ```python
 # Async iteration
 async for chunk in stream:
-    if chunk.choices:
-        delta = chunk.choices[0].delta
-        if delta.content:
-            print(delta.content, end="", flush=True)
+    print(chunk.content, end="", flush=True)
 ```
 
 ### `StreamChunk`
 
-Each yielded chunk during streaming:
+Each yielded chunk during streaming. Provides convenience properties that proxy the first choice:
+
+| Property | Type | Description |
+|---|---|---|
+| `content` | `str \| None` | Incremental text content |
+| `reasoning` | `str \| None` | Incremental reasoning/thinking content |
+| `tool_calls` | `list[ToolCallDelta] \| None` | Incremental tool call data |
+| `finish_reason` | `str \| None` | `"stop"`, `"length"`, `"tool_calls"`, etc. |
+
+Full access to underlying structure is still available:
 
 | Field | Type | Description |
 |---|---|---|
@@ -318,7 +340,8 @@ tools = [
 ]
 
 response = chat(
-    model="groq/llama-3.3-70b-versatile",
+    provider="groq",
+    model="llama-3.3-70b-versatile",
     messages=[{"role": "user", "content": "What's the weather in Tokyo?"}],
     tools=tools,
     tool_choice="auto",
@@ -340,19 +363,17 @@ if response.tool_calls:
 from swaplm import chat
 
 stream = chat(
-    model="groq/llama-3.3-70b-versatile",
+    provider="groq",
+    model="llama-3.3-70b-versatile",
     messages=[{"role": "user", "content": "Tell me a story"}],
     stream=True,
 )
 
 for chunk in stream:
-    if chunk.choices:
-        content = chunk.choices[0].delta.content
-        if content:
-            print(content, end="", flush=True)
+    print(chunk.content, end="", flush=True)
 
 # Full text available after iteration
-print("\n\nFull:", stream.accumulated_content)
+print("\n\nFull:", stream.text)
 ```
 
 ### Async Streaming
@@ -363,16 +384,14 @@ from swaplm import achat
 
 async def main():
     stream = await achat(
-        model="groq/llama-3.3-70b-versatile",
+        provider="groq",
+        model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": "Tell me a story"}],
         stream=True,
     )
 
     async for chunk in stream:
-        if chunk.choices:
-            content = chunk.choices[0].delta.content
-            if content:
-                print(content, end="", flush=True)
+        print(chunk.content, end="", flush=True)
 
 asyncio.run(main())
 ```
@@ -448,7 +467,8 @@ class MyTransport(BaseTransport):
 configure(transport=MyTransport())
 
 response = chat(
-    model="groq/llama-3.3-70b-versatile",
+    provider="groq",
+    model="llama-3.3-70b-versatile",
     messages=[{"role": "user", "content": "Hello!"}],
 )
 print(response.content)  # => "Intercepted!"
@@ -491,7 +511,8 @@ class LoggingMiddleware(BaseMiddleware):
 add_middleware(LoggingMiddleware())
 
 response = chat(
-    model="groq/llama-3.3-70b-versatile",
+    provider="groq",
+    model="llama-3.3-70b-versatile",
     messages=[{"role": "user", "content": "Hello!"}],
 )
 # Prints:
@@ -545,7 +566,8 @@ on("before_request", log_request)
 on("after_request", log_response)
 
 response = chat(
-    model="groq/llama-3.3-70b-versatile",
+    provider="groq",
+    model="llama-3.3-70b-versatile",
     messages=[{"role": "user", "content": "Hi"}],
 )
 
@@ -617,7 +639,8 @@ from swaplm.exceptions import (
 
 try:
     response = chat(
-        model="groq/nonexistent-model",
+        provider="groq",
+        model="nonexistent-model",
         messages=[{"role": "user", "content": "Hi"}],
         api_key="invalid",
     )
@@ -675,8 +698,9 @@ tool = Tool(
 from swaplm import ChatRequest, Message
 
 request = ChatRequest(
-    model="groq/llama-3.3-70b-versatile",
+    model="llama-3.3-70b-versatile",
     messages=[Message(role="user", content="Hi")],
+    provider="groq",                   # explicit provider (recommended)
     stream=False,
     max_tokens=1024,
     temperature=0.7,
