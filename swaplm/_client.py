@@ -223,11 +223,13 @@ class _Client:
                     retries=request.retries,
                 )
             else:
-                status_code, data = self._http.post(
+                status_code, data = await self._http.asend(
+                    "POST",
                     url,
                     headers=headers,
-                    body=body,
+                    json=body,
                     timeout=request.timeout,
+                    retries=request.retries,
                 )
 
             if status_code >= 400:
