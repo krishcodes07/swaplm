@@ -86,6 +86,13 @@ class OpenAIProtocol(BaseProtocol):
             if request.tool_choice is not None:
                 body["tool_choice"] = request.tool_choice
 
+        if (
+            model_info is None
+            or model_info.supports_json_mode
+            or model_info.supports_structured_output
+        ) and request.response_format is not None:
+            body["response_format"] = request.response_format
+
         if request.provider_options:
             opts = dict(request.provider_options)
             if model_info is not None:

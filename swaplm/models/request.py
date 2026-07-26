@@ -30,6 +30,7 @@ class ChatRequest(BaseModel):
     top_p: float | None = None
     stop: str | list[str] | None = None
     seed: int | None = None
+    response_format: dict[str, Any] | None = None
 
     # ── Tool calling ──────────────────────────────────────────────────
     tools: list[Tool] | None = None

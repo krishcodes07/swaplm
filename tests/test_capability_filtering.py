@@ -73,3 +73,23 @@ class TestCapabilityFiltering:
         assert "thinking" not in body
         assert "response_format" not in body
         assert body.get("custom_option") == 123
+
+    def test_response_format_parameter_included_when_supported(self):
+        model_info = ModelInfo(id="m1", supports_json_mode=True)
+        req = ChatRequest(
+            model="test/m1",
+            messages=[Message(role="user", content="Hi")],
+            response_format={"type": "json_object"},
+        )
+        body = self.protocol.build_request_body(req, model_info=model_info)
+        assert body.get("response_format") == {"type": "json_object"}
+
+    def test_response_format_parameter_omitted_when_unsupported(self):
+        model_info = ModelInfo(id="m1", supports_json_mode=False, supports_structured_output=False)
+        req = ChatRequest(
+            model="test/m1",
+            messages=[Message(role="user", content="Hi")],
+            response_format={"type": "json_object"},
+        )
+        body = self.protocol.build_request_body(req, model_info=model_info)
+        assert "response_format" not in body

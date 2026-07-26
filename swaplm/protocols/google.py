@@ -116,6 +116,17 @@ class GoogleProtocol(BaseProtocol):
         if (model_info is None or model_info.supports_seed) and request.seed is not None:
             gen_config["seed"] = request.seed
 
+        if (
+            model_info is None
+            or model_info.supports_json_mode
+            or model_info.supports_structured_output
+        ) and request.response_format is not None:
+            fmt_type = request.response_format.get("type")
+            if fmt_type in ("json_object", "json_schema"):
+                gen_config["responseMimeType"] = "application/json"
+            if "response_schema" in request.response_format:
+                gen_config["responseSchema"] = request.response_format["response_schema"]
+
         if gen_config:
             body["generationConfig"] = gen_config
 

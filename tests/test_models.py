@@ -112,12 +112,14 @@ class TestChatRequest:
             top_p=0.9,
             stop=["END"],
             seed=42,
+            response_format={"type": "json_object"},
             timeout=30.0,
             retries=3,
             extra_headers={"X-Custom": "value"},
             provider_options={"logprobs": True},
         )
         assert req.stream is True
+        assert req.response_format == {"type": "json_object"}
         assert req.max_tokens == 100
         assert req.seed == 42
 
