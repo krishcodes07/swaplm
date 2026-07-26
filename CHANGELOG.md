@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.1] - 2026-07-26
+
+### Fixed
+- `StreamChunk.content` and `StreamChunk.reasoning` return empty string `""` instead of `None` when no content is present. `print(chunk.content, end="")` now works without guard clauses.
+
+---
+
 ## [0.2.0] - 2026-07-26
 
 ### Added
