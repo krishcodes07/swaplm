@@ -21,7 +21,9 @@ Write your code once. Swap providers with a single line change.
 from swaplm import chat, achat
 
 # Sync
-response = chat(model="groq/llama-3.3-70b-versatile", messages=[{"role": "user", "content": "Hello!"}])
+response = chat(
+    model="groq/llama-3.3-70b-versatile", messages=[{"role": "user", "content": "Hello!"}]
+)
 
 # Async
 response = await achat(model="openai/gpt-4o", messages=[{"role": "user", "content": "Hello!"}])
@@ -88,7 +90,9 @@ res_openai = chat(model="openai/gpt-4o", messages=[{"role": "user", "content": "
 res_github = chat(model="github/gpt-4o", messages=[{"role": "user", "content": "Hello!"}])
 
 # OpenRouter (Free)
-res_free = chat(model="free/qwen-2.5-72b-instruct:free", messages=[{"role": "user", "content": "Hello!"}])
+res_free = chat(
+    model="free/qwen-2.5-72b-instruct:free", messages=[{"role": "user", "content": "Hello!"}]
+)
 ```
 
 ---

@@ -1,17 +1,37 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to **SwapLM** will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+---
+
+## [0.1.0] - 2026-07-26
 
 ### Added
-
-- Project foundation and repository structure.
-- Initial package layout with module stubs (`auth`, `protocols`, `providers`, `models`, `router`, `streaming`, `utils`, `resources`).
-- Development tooling configuration (Ruff, Pytest).
-- GitHub Actions CI workflows for linting and testing.
-- Documentation: README, CONTRIBUTING, CHANGELOG, LICENSE.
-- EditorConfig for consistent formatting.
+- **Unified SDK API**: High-level `chat(...)` (sync) and `achat(...)` (async) entrypoints.
+- **16 Production Providers**:
+  - OpenAI (`openai`)
+  - Anthropic (`anthropic`)
+  - Google Gemini (`google`)
+  - Groq (`groq`)
+  - OpenRouter (`openrouter`, 345+ models)
+  - GitHub Models (`github`)
+  - NVIDIA NIM (`nvidia`)
+  - Cerebras (`cerebras`)
+  - SambaNova (`sambanova`)
+  - Mistral AI (`mistral`)
+  - xAI Grok (`xai`)
+  - DeepInfra (`deepinfra`)
+  - Fireworks AI (`fireworks`)
+  - Cloudflare Workers AI (`cloudflare`)
+  - Perplexity AI (`perplexity`)
+  - Cohere (`cohere`)
+- **Protocol System**: Robust request/response translation layers for OpenAI, Anthropic, and Google Gemini protocols.
+- **Transport Engine**: `BaseTransport` interface with `HTTPTransport` implementation using `httpx.Client` & `httpx.AsyncClient` connection pooling, SSE streaming, and exponential backoff retries.
+- **Middleware Interceptors**: `BaseMiddleware` class and pipeline execution (`add_middleware()`, `remove_middleware()`, `reset_middlewares()`).
+- **Lifecycle Event Hooks**: `on()` and `off()` listeners supporting `before_request`, `after_request`, `before_retry`, `after_retry`, `on_error`.
+- **Advanced Router**: Deterministic resolution supporting explicit provider prefixes (`openai/gpt-4o`), alias matching (`llama-3.3-70b`), virtual `free/` provider routing, and `AmbiguousModelError` detection.
+- **Discovery APIs**: `providers()`, `provider()`, `models()`, `model()` public discovery helpers.
+- **Structured Debug Logging**: `configure(debug=True)` with sensitive API token & header redaction.
