@@ -21,30 +21,42 @@ Write your code once. Swap providers with a single line change.
 from swaplm import chat, achat
 
 # Sync
-response = chat(
-    model="groq/llama-3.3-70b-versatile", messages=[{"role": "user", "content": "Hello!"}]
-)
+response = chat(model="groq/llama-3.3-70b-versatile", messages=[{"role": "user", "content": "Hello!"}])
 
 # Async
-response = await achat(
-    model="anthropic/claude-3-5-sonnet-20241022", messages=[{"role": "user", "content": "Hello!"}]
-)
+response = await achat(model="openai/gpt-4o", messages=[{"role": "user", "content": "Hello!"}])
 ```
 
 ---
 
-## Supported Providers
+## Provider Capability Matrix (17 Supported Providers)
 
-| Provider | Status | Example Model | Default Env Var |
-|---|---|---|---|
-| **Groq** | ✅ Active | `groq/llama-3.3-70b-versatile` | `GROQ_API_KEY` |
-| **Anthropic** | ✅ Active | `anthropic/claude-3-5-sonnet-20241022` | `ANTHROPIC_API_KEY` |
-| **Google Gemini** | ✅ Active | `google/gemini-2.5-pro` | `GEMINI_API_KEY` |
+| Provider | Slug | Protocol | Default Env Var | Free Tier | Streaming | Tool Calling | Structured Output | Reasoning |
+|---|---|---|---|:---:|:---:|:---:|:---:|:---:|
+| **Groq** | `groq` | OpenAI | `GROQ_API_KEY` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Anthropic** | `anthropic` | Anthropic | `ANTHROPIC_API_KEY` | ❌ | ✅ | ✅ | ✅ | ✅ |
+| **Google Gemini** | `google` | Google | `GEMINI_API_KEY` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **OpenAI** | `openai` | OpenAI | `OPENAI_API_KEY` | ❌ | ✅ | ✅ | ✅ | ✅ |
+| **OpenRouter** | `openrouter` | OpenAI | `OPENROUTER_API_KEY` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Together AI** | `together` | OpenAI | `TOGETHER_API_KEY` | ❌ | ✅ | ✅ | ✅ | ✅ |
+| **GitHub Models** | `github` | OpenAI | `GITHUB_TOKEN` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **NVIDIA NIM** | `nvidia` | OpenAI | `NVIDIA_API_KEY` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Cerebras** | `cerebras` | OpenAI | `CEREBRAS_API_KEY` | ✅ | ✅ | ✅ | ✅ | ❌ |
+| **SambaNova** | `sambanova` | OpenAI | `SAMBANOVA_API_KEY` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Mistral AI** | `mistral` | OpenAI | `MISTRAL_API_KEY` | ✅ | ✅ | ✅ | ✅ | ❌ |
+| **xAI** | `xai` | OpenAI | `XAI_API_KEY` | ❌ | ✅ | ✅ | ✅ | ❌ |
+| **DeepInfra** | `deepinfra` | OpenAI | `DEEPINFRA_API_KEY` | ❌ | ✅ | ✅ | ✅ | ✅ |
+| **Fireworks AI** | `fireworks` | OpenAI | `FIREWORKS_API_KEY` | ❌ | ✅ | ✅ | ✅ | ✅ |
+| **Cloudflare** | `cloudflare` | OpenAI | `CLOUDFLARE_API_KEY` | ✅ | ✅ | ✅ | ✅ | ❌ |
+| **Perplexity** | `perplexity` | OpenAI | `PERPLEXITY_API_KEY` | ❌ | ✅ | ❌ | ❌ | ✅ |
+| **Cohere** | `cohere` | OpenAI | `COHERE_API_KEY` | ❌ | ✅ | ✅ | ✅ | ❌ |
 
 ---
 
 ## Features
 
+- [x] 17 Production Provider Integrations (Groq, Anthropic, Gemini, OpenAI, OpenRouter, Together, GitHub, NVIDIA, Cerebras, SambaNova, Mistral, xAI, DeepInfra, Fireworks, Cloudflare, Perplexity, Cohere)
+- [x] Zero-Code Provider Scaling via Metadata-Only Adapters
 - [x] Complete Async API (`achat()`) & Async Streaming (`async for chunk in stream:`)
 - [x] Configurable Transport Retries with Exponential Backoff (5xx, timeouts, 429 rate limits)
 - [x] Interceptor Middleware Pipeline (`BaseMiddleware`, `add_middleware()`)
@@ -63,113 +75,21 @@ response = await achat(
 
 ---
 
-## Usage Guide
+## Code Examples
 
-### Global Configuration & Debug Mode
-
-Set SDK-wide default options across all `chat()` and `achat()` calls:
+### Explicit Provider Selection
 
 ```python
-from swaplm import configure
+from swaplm import chat
 
-configure(
-    timeout=45.0,
-    retries=3,
-    debug=True,  # Expose normalized request/response payloads with redacted credentials
-)
-```
+# OpenAI
+res_openai = chat(model="openai/gpt-4o", messages=[{"role": "user", "content": "Hello!"}])
 
-### Async API (`achat`)
+# GitHub Models (Free)
+res_github = chat(model="github/gpt-4o", messages=[{"role": "user", "content": "Hello!"}])
 
-```python
-import asyncio
-from swaplm import achat
-
-
-async def main():
-    response = await achat(
-        model="anthropic/claude-3-5-sonnet-20241022",
-        messages=[{"role": "user", "content": "Async Hello!"}],
-    )
-    print(response.content)
-
-
-asyncio.run(main())
-```
-
-### Async Streaming
-
-```python
-stream = await achat(
-    model="google/gemini-2.5-pro",
-    messages=[{"role": "user", "content": "Write a short poem."}],
-    stream=True,
-)
-
-async for chunk in stream:
-    if chunk.choices and chunk.choices[0].delta.content:
-        print(chunk.choices[0].delta.content, end="", flush=True)
-
-print("\n\nFull text:\n", stream.accumulated_content)
-```
-
-### Middleware Pipeline
-
-Intercept and modify requests, responses, or exceptions:
-
-```python
-from swaplm import BaseMiddleware, add_middleware, ChatRequest, ChatResponse
-
-
-class LoggingMiddleware(BaseMiddleware):
-    def process_request(self, request: ChatRequest) -> ChatRequest:
-        print(f"[Middleware] Outgoing request to {request.model}")
-        return request
-
-    def process_response(self, response: ChatResponse) -> ChatResponse:
-        print(f"[Middleware] Incoming response from {response.provider}")
-        return response
-
-
-add_middleware(LoggingMiddleware())
-```
-
-### Lifecycle Hooks
-
-Register lightweight event listeners:
-
-```python
-from swaplm import on
-
-
-@on("before_request")
-def handle_before_req(request):
-    print(f"Sending request to {request.model}")
-
-
-@on("before_retry")
-def handle_retry(url, error_or_status, attempt):
-    print(f"Retry attempt {attempt} for {url} due to {error_or_status}")
-```
-
-### Custom Transport Injection
-
-Inject a custom transport for testing, caching, or enterprise proxies:
-
-```python
-from swaplm import BaseTransport, configure
-
-
-class MyCustomTransport(BaseTransport):
-    def send(self, method, url, **kwargs):
-        # Custom proxying or mock response
-        return 200, {"choices": [{"message": {"role": "assistant", "content": "Mocked!"}}]}
-
-    async def asend(self, method, url, **kwargs):
-        return 200, {"choices": [{"message": {"role": "assistant", "content": "Mocked!"}}]}
-
-
-configure(transport=MyCustomTransport())
+# OpenRouter (Free)
+res_free = chat(model="free/qwen-2.5-72b-instruct:free", messages=[{"role": "user", "content": "Hello!"}])
 ```
 
 ---
@@ -183,9 +103,9 @@ configure(transport=MyCustomTransport())
 | **3** | First production provider (Groq) & HTTP execution | ✅ Completed |
 | **4** | Core SDK Infrastructure (Routing, Discovery, Config) | ✅ Completed |
 | **5** | Multi-Protocol Validation (Anthropic & Google Gemini) | ✅ Completed |
-| **6** | SDK Runtime & Developer Experience (Async, Retries, Middleware, Hooks) | ✅ Current |
-| **7** | OpenAI provider & remaining OpenAI-compatible providers | 🔜 Next |
-| **8** | Enterprise resilience (fallbacks, circuit breakers) | Planned |
+| **6** | SDK Runtime & Developer Experience (Async, Retries, Middleware, Hooks) | ✅ Completed |
+| **7** | OpenAI-Compatible Provider Expansion (17 Providers Integrated) | ✅ Current |
+| **8** | Enterprise resilience (fallbacks, circuit breakers) | 🔜 Next |
 | **9** | Documentation site & v1.0 release | Planned |
 
 ---

@@ -1,0 +1,67 @@
+[
+  {
+    "id": "gpt-4o",
+    "display_name": "GPT-4o (GitHub)",
+    "type": "chat",
+    "context_window": 128000,
+    "max_tokens": 4096,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  },
+  {
+    "id": "gpt-4o-mini",
+    "display_name": "GPT-4o Mini (GitHub)",
+    "type": "chat",
+    "context_window": 128000,
+    "max_tokens": 4096,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  },
+  {
+    "id": "Llama-3.3-70B-Instruct",
+    "display_name": "Llama 3.3 70B Instruct (GitHub)",
+    "type": "chat",
+    "context_window": 128000,
+    "max_tokens": 4096,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  },
+  {
+    "id": "phi-4",
+    "display_name": "Phi-4 (GitHub)",
+    "type": "chat",
+    "context_window": 128000,
+    "max_tokens": 4096,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  },
+  {
+    "id": "Mistral-large-2411",
+    "display_name": "Mistral Large 2411 (GitHub)",
+    "type": "chat",
+    "context_window": 128000,
+    "max_tokens": 4096,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  }
+]

@@ -1,0 +1,41 @@
+[
+  {
+    "id": "grok-2-latest",
+    "display_name": "Grok 2",
+    "type": "chat",
+    "context_window": 131072,
+    "max_tokens": 8192,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  },
+  {
+    "id": "grok-2-vision-latest",
+    "display_name": "Grok 2 Vision",
+    "type": "chat",
+    "context_window": 32768,
+    "max_tokens": 8192,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  },
+  {
+    "id": "grok-beta",
+    "display_name": "Grok Beta",
+    "type": "chat",
+    "context_window": 131072,
+    "max_tokens": 8192,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  }
+]

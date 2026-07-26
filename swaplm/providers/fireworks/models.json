@@ -1,0 +1,41 @@
+[
+  {
+    "id": "accounts/fireworks/models/llama-v3p3-70b-instruct",
+    "display_name": "Llama 3.3 70B Instruct (Fireworks)",
+    "type": "chat",
+    "context_window": 128000,
+    "max_tokens": 8192,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  },
+  {
+    "id": "accounts/fireworks/models/qwen2p5-72b-instruct",
+    "display_name": "Qwen 2.5 72B Instruct (Fireworks)",
+    "type": "chat",
+    "context_window": 32768,
+    "max_tokens": 8192,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  },
+  {
+    "id": "accounts/fireworks/models/deepseek-r1",
+    "display_name": "DeepSeek R1 (Fireworks)",
+    "type": "chat",
+    "context_window": 16384,
+    "max_tokens": 8192,
+    "supports_streaming": true,
+    "supports_tool_calling": false,
+    "supports_structured_output": false,
+    "supports_thinking": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  }
+]

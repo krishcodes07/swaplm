@@ -1,0 +1,44 @@
+[
+  {
+    "id": "gpt-oss-120b",
+    "display_name": "OpenAI GPT OSS 120B",
+    "type": "chat",
+    "context_window": 131072,
+    "max_tokens": 40960,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true,
+    "supports_thinking": true
+  },
+  {
+    "id": "gemma-4-31b",
+    "display_name": "Gemma 4 31B",
+    "type": "chat",
+    "context_window": 131072,
+    "max_tokens": 40960,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true,
+    "supports_thinking": true
+  },
+  {
+    "id": "zai-glm-4.7",
+    "display_name": "Z.ai GLM 4.7",
+    "type": "chat",
+    "context_window": 131072,
+    "max_tokens": 40960,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true,
+    "supports_thinking": true
+  }
+]

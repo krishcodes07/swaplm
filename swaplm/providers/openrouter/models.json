@@ -1,0 +1,80 @@
+[
+  {
+    "id": "openrouter/auto",
+    "display_name": "OpenRouter Auto Router",
+    "type": "chat",
+    "context_window": 128000,
+    "max_tokens": 8192,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  },
+  {
+    "id": "openrouter/free",
+    "display_name": "OpenRouter Free Router",
+    "type": "chat",
+    "context_window": 128000,
+    "max_tokens": 8192,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  },
+  {
+    "id": "google/gemma-4-31b-it:free",
+    "display_name": "Gemma 4 31B IT (Free)",
+    "type": "chat",
+    "context_window": 128000,
+    "max_tokens": 8192,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  },
+  {
+    "id": "google/gemma-4-26b-a4b-it:free",
+    "display_name": "Gemma 4 26B A4B IT (Free)",
+    "type": "chat",
+    "context_window": 128000,
+    "max_tokens": 8192,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  },
+  {
+    "id": "nvidia/nemotron-3-super-120b-a12b:free",
+    "display_name": "Nemotron 3 Super 120B (Free)",
+    "type": "chat",
+    "context_window": 128000,
+    "max_tokens": 8192,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  },
+  {
+    "id": "inclusionai/ling-3.0-flash:free",
+    "display_name": "Ling 3.0 Flash (Free)",
+    "type": "chat",
+    "context_window": 32768,
+    "max_tokens": 4096,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  }
+]

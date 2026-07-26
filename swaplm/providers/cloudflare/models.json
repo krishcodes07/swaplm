@@ -1,0 +1,28 @@
+[
+  {
+    "id": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    "display_name": "Llama 3.3 70B Instruct Fast (Cloudflare)",
+    "type": "chat",
+    "context_window": 128000,
+    "max_tokens": 4096,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  },
+  {
+    "id": "@cf/qwen/qwen1.5-14b-chat-awq",
+    "display_name": "Qwen 1.5 14B Chat (Cloudflare)",
+    "type": "chat",
+    "context_window": 32768,
+    "max_tokens": 4096,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_structured_output": true,
+    "supports_json_mode": true,
+    "supports_temperature": true,
+    "supports_system_message": true
+  }
+]
