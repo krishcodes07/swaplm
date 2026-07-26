@@ -20,26 +20,14 @@ Write your code once. Swap providers with a single line change.
 ```python
 from swaplm import chat
 
-# OpenAI
+# Groq
 response = chat(
-    model="openai/gpt-5",
+    model="groq/llama-3.3-70b-versatile",
     messages=[{"role": "user", "content": "Hello!"}],
 )
 
-# Google
-response = chat(
-    model="google/gemini-2.5-pro",
-    messages=[{"role": "user", "content": "Hello!"}],
-)
-
-# Free tier
-response = chat(
-    model="free/qwen3-30b",
-    messages=[{"role": "user", "content": "Hello!"}],
-)
+print(response.content)
 ```
-
-> **Status:** SwapLM is in early development. The public API is not yet available.
 
 ---
 
@@ -49,95 +37,148 @@ LLM providers each ship their own SDK with different conventions, authentication
 
 SwapLM eliminates this friction. A single, consistent API lets you target **any** provider while keeping your application code clean and portable.
 
-## Goals
+## Supported Providers
 
-| Goal | Description |
-|---|---|
-| **Unified API** | One function call to reach any provider |
-| **Excellent DX** | Intuitive, strongly-typed, minimal boilerplate |
-| **Clean Architecture** | Modular internals that are easy to read and extend |
-| **Strong Typing** | Full type annotations and Pydantic models throughout |
-| **Minimal Dependencies** | Only what's essential — `httpx` and `pydantic` |
-| **Extensible Providers** | Add new providers without touching core code |
-| **Open Source Standards** | CI, changelogs, semver, contributor guides |
+| Provider | Status | Model Example | Default Env Var |
+|---|---|---|---|
+| **Groq** | ✅ Active | `groq/llama-3.3-70b-versatile` | `GROQ_API_KEY` |
 
-## Planned Features
+---
+
+## Features
 
 - [x] Project foundation and repository structure
-- [ ] Provider architecture and protocol system
-- [ ] OpenAI-compatible provider
-- [ ] Anthropic-compatible provider
-- [ ] Google Gemini provider
-- [ ] Unified chat completions API
-- [ ] Streaming support (SSE)
-- [ ] Async support
-- [ ] Model registry and routing
-- [ ] Automatic API key management
+- [x] Provider architecture and protocol system
+- [x] Groq production provider integration
+- [x] HTTP execution engine (`httpx`)
+- [x] Server-Sent Events (SSE) streaming support
+- [x] Model capability registry
+- [x] Automatic API key management
+- [x] Tool / Function calling support
+- [x] Unified exception hierarchy
+- [ ] Additional providers (OpenAI, Anthropic, Google, etc.)
+- [ ] Async client support (`achat`)
 - [ ] Provider fallback and retry logic
-- [ ] Free-tier provider support (OpenRouter, Cerebras, etc.)
-- [ ] Tool / function calling
-- [ ] Multi-modal support (images, audio)
-- [ ] CLI for quick testing
-- [ ] Comprehensive documentation site
 
-## Installation
+---
 
-> **Note:** SwapLM is not yet published to PyPI. The instructions below will work once the first release is available.
+## Quickstart
+
+### Installation
 
 ```bash
 pip install swaplm
 ```
 
-For development:
+### Authentication
+
+Set the API key via environment variable:
 
 ```bash
-git clone https://github.com/krishcodes07/swaplm.git
-cd swaplm
-python -m venv .venv
-source .venv/bin/activate  # or .venv\Scripts\activate on Windows
-pip install -e ".[dev]"
+export GROQ_API_KEY="gsk_..."
 ```
 
-## Quick Example
+Or pass `api_key` explicitly:
 
 ```python
 from swaplm import chat
 
 response = chat(
-    model="openai/gpt-5",
+    model="groq/llama-3.3-70b-versatile",
+    messages=[{"role": "user", "content": "Explain quantum computing in one sentence."}],
+    api_key="gsk_...",
+)
+```
+
+### Basic Chat Completion
+
+```python
+from swaplm import chat
+
+response = chat(
+    model="groq/llama-3.3-70b-versatile",
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": "Explain quantum computing in one sentence."},
+        {"role": "user", "content": "What is the capital of France?"},
     ],
+    temperature=0.7,
+    max_tokens=100,
 )
 
 print(response.content)
+print(f"Tokens used: {response.usage.total_tokens}")
 ```
 
-Swap the model string to switch providers — no other code changes required:
+### Streaming Responses
 
 ```python
-response = chat(model="anthropic/claude-4-sonnet", messages=[...])
-response = chat(model="google/gemini-2.5-pro", messages=[...])
-response = chat(model="groq/llama-4-scout", messages=[...])
+from swaplm import chat
+
+stream = chat(
+    model="groq/llama-3.3-70b-versatile",
+    messages=[{"role": "user", "content": "Write a short poem about code."}],
+    stream=True,
+)
+
+for chunk in stream:
+    if chunk.choices and chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="", flush=True)
+
+# Full accumulated content is also accessible:
+print("\n\nFull Poem:\n", stream.accumulated_content)
 ```
+
+### Tool / Function Calling
+
+```python
+from swaplm import Tool, chat
+
+weather_tool = Tool.model_validate(
+    {
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "description": "Get current weather for a location",
+            "parameters": {
+                "type": "object",
+                "properties": {"location": {"type": "string", "description": "City name"}},
+                "required": ["location"],
+            },
+        },
+    }
+)
+
+response = chat(
+    model="groq/llama-3.3-70b-versatile",
+    messages=[{"role": "user", "content": "What's the weather in Tokyo?"}],
+    tools=[weather_tool],
+    tool_choice="auto",
+)
+
+if response.tool_calls:
+    tool_call = response.tool_calls[0]
+    print(f"Model requested tool: {tool_call.function.name}")
+    print(f"Arguments: {tool_call.function.arguments}")
+```
+
+---
 
 ## Roadmap
 
 | Phase | Milestone | Status |
 |---|---|---|
-| **1** | Project foundation & repository structure | ✅ Current |
-| **2** | Provider architecture & protocol system | 🔜 Next |
-| **3** | First providers (OpenAI, Anthropic, Google) | Planned |
-| **4** | Streaming & async support | Planned |
-| **5** | Model registry & intelligent routing | Planned |
-| **6** | Advanced features (fallbacks, retries, tools) | Planned |
-| **7** | Free-tier providers & community providers | Planned |
+| **1** | Project foundation & repository structure | ✅ Completed |
+| **2** | Provider architecture & protocol system | ✅ Completed |
+| **3** | First production provider (Groq) & HTTP execution | ✅ Current |
+| **4** | Additional core providers (OpenAI, Anthropic, Google) | 🔜 Next |
+| **5** | Async support & streaming enhancements | Planned |
+| **6** | Model registry & intelligent routing | Planned |
+| **7** | Advanced features (fallbacks, retries) | Planned |
 | **8** | Documentation site & v1.0 release | Planned |
 
-## Architecture
+---
 
-SwapLM is built around a modular, layered architecture:
+## Architecture
 
 ```
 ┌──────────────────────────────────────────────┐
@@ -150,41 +191,15 @@ SwapLM is built around a modular, layered architecture:
 │    OpenAI-compat · Anthropic · Google        │
 ├──────────────────────────────────────────────┤
 │                 Providers                    │
-│  OpenAI · Anthropic · Gemini · Groq · ...   │
+│                Groq · ...                    │
+├──────────────────────────────────────────────┤
+│             HTTP Transport (httpx)           │
 ├──────────────────────────────────────────────┤
 │              Auth · Models · Utils           │
-│     API keys · Pydantic models · Helpers     │
 └──────────────────────────────────────────────┘
 ```
 
-**Key concepts:**
-
-- **Providers** — Vendor-specific implementations (one per service).
-- **Protocols** — Shared API patterns (e.g., many providers use the OpenAI chat format).
-- **Router** — Maps a `provider/model` string to the correct provider + protocol.
-- **Models** — Pydantic schemas for requests, responses, and configuration.
-- **Auth** — Manages API keys from environment variables, config files, or direct input.
-
-## Project Structure
-
-```
-swaplm/
-├── __init__.py          # Public API surface
-├── version.py           # Single source of version truth
-├── auth/                # API key management
-├── protocols/           # Shared API protocol implementations
-├── providers/           # Vendor-specific provider adapters
-├── models/              # Pydantic request/response schemas
-├── router/              # Model string → provider resolution
-├── streaming/           # SSE and streaming utilities
-├── utils/               # Shared helpers and constants
-└── resources/           # Static assets (model lists, etc.)
-
-docs/                    # Documentation
-examples/                # Usage examples
-tests/                   # Test suite
-.github/workflows/       # CI/CD pipelines
-```
+---
 
 ## Contributing
 

@@ -11,6 +11,7 @@ from typing import Any
 
 from swaplm.exceptions import (
     AuthenticationError,
+    InvalidModelError,
     ProviderError,
     RateLimitError,
     SwapLMError,
@@ -196,6 +197,8 @@ class OpenAIProtocol(BaseProtocol):
         error_data = data.get("error", {})
         message = error_data.get("message", data.get("message", "Unknown error"))
 
+        code = error_data.get("code") if isinstance(error_data, dict) else None
+
         if status_code == 401:
             return AuthenticationError(
                 message, provider=provider, model=model, status_code=status_code
@@ -204,4 +207,11 @@ class OpenAIProtocol(BaseProtocol):
             return RateLimitError(message, provider=provider, model=model, status_code=status_code)
         if status_code == 408:
             return TimeoutError(message, provider=provider, model=model, status_code=status_code)
+        if (
+            status_code == 404
+            or code in ("model_not_found", "invalid_model")
+            or ("model" in message.lower() and "not found" in message.lower())
+        ):
+            return InvalidModelError(message, model=model)
+
         return ProviderError(message, provider=provider, model=model, status_code=status_code)
