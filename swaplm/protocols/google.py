@@ -10,6 +10,7 @@ from typing import Any
 
 from swaplm.exceptions import (
     AuthenticationError,
+    InvalidModelError,
     ProviderError,
     RateLimitError,
     SwapLMError,
@@ -40,7 +41,7 @@ class GoogleProtocol(BaseProtocol):
     ) -> str:
         base = (request.base_url or provider.base_url).rstrip("/")
         model = request.model_id
-        action = "streamGenerateContent" if request.stream else "generateContent"
+        action = "streamGenerateContent?alt=sse" if request.stream else "generateContent"
         return f"{base}/models/{model}:{action}"
 
     def build_request_headers(
@@ -67,9 +68,10 @@ class GoogleProtocol(BaseProtocol):
 
         for m in request.messages:
             if m.role == "system":
-                system_instruction = {
-                    "parts": [{"text": m.content if isinstance(m.content, str) else ""}]
-                }
+                if model_info is None or model_info.supports_system_message:
+                    system_instruction = {
+                        "parts": [{"text": m.content if isinstance(m.content, str) else ""}]
+                    }
             else:
                 role = "model" if m.role == "assistant" else "user"
                 parts: list[dict[str, Any]] = []
@@ -97,21 +99,28 @@ class GoogleProtocol(BaseProtocol):
         gen_config: dict[str, Any] = {}
         if request.max_tokens is not None:
             gen_config["maxOutputTokens"] = request.max_tokens
-        if request.temperature is not None:
+
+        if (
+            model_info is None or model_info.supports_temperature
+        ) and request.temperature is not None:
             gen_config["temperature"] = request.temperature
+
         if request.top_p is not None:
             gen_config["topP"] = request.top_p
+
         if request.stop is not None:
             gen_config["stopSequences"] = (
                 request.stop if isinstance(request.stop, list) else [request.stop]
             )
-        if request.seed is not None:
+
+        if (model_info is None or model_info.supports_seed) and request.seed is not None:
             gen_config["seed"] = request.seed
+
         if gen_config:
             body["generationConfig"] = gen_config
 
         # Tools
-        if request.tools:
+        if (model_info is None or model_info.supports_tool_calling) and request.tools:
             body["tools"] = [
                 {
                     "functionDeclarations": [
@@ -126,7 +135,10 @@ class GoogleProtocol(BaseProtocol):
             ]
 
         if request.provider_options:
-            body.update(request.provider_options)
+            opts = dict(request.provider_options)
+            if model_info is not None and not model_info.supports_thinking:
+                opts.pop("thinkingConfig", None)
+            body.update(opts)
 
         return body
 
@@ -250,15 +262,19 @@ class GoogleProtocol(BaseProtocol):
     ) -> SwapLMError:
         error_data = data.get("error", {})
         message = error_data.get("message", "Unknown error")
+        status = error_data.get("status", "")
 
-        if status_code in (401, 403):
+        if status_code in (401, 403) or status == "UNAUTHENTICATED":
             return AuthenticationError(
                 message, provider=provider, model=model, status_code=status_code
             )
-        if status_code == 429:
+        if status_code == 429 or status == "RESOURCE_EXHAUSTED":
             return RateLimitError(message, provider=provider, model=model, status_code=status_code)
         if status_code == 408:
             return TimeoutError(message, provider=provider, model=model, status_code=status_code)
+        if status_code == 404 or status == "NOT_FOUND":
+            return InvalidModelError(message, model=model)
+
         return ProviderError(message, provider=provider, model=model, status_code=status_code)
 
     # ── Internal helpers ──────────────────────────────────────────────

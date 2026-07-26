@@ -21,13 +21,24 @@ Write your code once. Swap providers with a single line change.
 from swaplm import chat
 
 # Groq
-response = chat(
-    model="groq/llama-3.3-70b-versatile",
-    messages=[{"role": "user", "content": "Hello!"}],
-)
+response = chat(model="groq/llama-3.3-70b-versatile", messages=[{"role": "user", "content": "Hello!"}])
 
-print(response.content)
+# Anthropic
+response = chat(model="anthropic/claude-3-5-sonnet-20241022", messages=[{"role": "user", "content": "Hello!"}])
+
+# Google Gemini
+response = chat(model="google/gemini-2.5-pro", messages=[{"role": "user", "content": "Hello!"}])
 ```
+
+---
+
+## Supported Providers
+
+| Provider | Status | Example Model | Default Env Var |
+|---|---|---|---|
+| **Groq** | ✅ Active | `groq/llama-3.3-70b-versatile` | `GROQ_API_KEY` |
+| **Anthropic** | ✅ Active | `anthropic/claude-3-5-sonnet-20241022` | `ANTHROPIC_API_KEY` |
+| **Google Gemini** | ✅ Active | `google/gemini-2.5-pro` | `GEMINI_API_KEY` |
 
 ---
 
@@ -35,17 +46,17 @@ print(response.content)
 
 - [x] Project foundation and repository structure
 - [x] Provider architecture and protocol system
-- [x] Groq production provider integration
+- [x] Production provider integrations (Groq, Anthropic, Google Gemini)
 - [x] HTTP execution engine (`httpx`)
-- [x] Server-Sent Events (SSE) streaming support
+- [x] Server-Sent Events (SSE) streaming support across all protocols
 - [x] Model capability registry & automatic parameter omission
-- [x] Advanced router: model aliases, ambiguity detection, `free/` provider routing
+- [x] Advanced router: explicit model strings, aliases, `free/` virtual provider
 - [x] Public provider & model discovery APIs (`providers()`, `models()`, `provider()`, `model()`)
 - [x] Global configuration system (`configure()`)
 - [x] Automatic API key management
 - [x] Tool / Function calling support
 - [x] Unified exception hierarchy
-- [ ] Additional providers (OpenAI, Anthropic, Google, etc.)
+- [ ] OpenAI provider integration
 - [ ] Async client support (`achat`)
 - [ ] Provider fallback and retry logic
 
@@ -68,27 +79,24 @@ configure(
 )
 ```
 
-### Advanced Model Routing
+### Model Routing
 
-#### 1. Explicit Model String (`provider/model`)
+#### 1. Explicit Provider & Model
 
 ```python
 response = chat(model="groq/llama-3.3-70b-versatile", messages=[...])
+response = chat(model="anthropic/claude-3-5-sonnet-20241022", messages=[...])
+response = chat(model="google/gemini-2.5-pro", messages=[...])
 ```
 
 #### 2. Alias Resolution
 
-If a model alias uniquely exists in a registered provider, specify the alias directly:
-
 ```python
-response = chat(model="llama-3.3-70b-versatile", messages=[...])
+response = chat(model="claude-3-5-sonnet-20241022", messages=[...])
+response = chat(model="gemini-2.5-pro", messages=[...])
 ```
 
-*If multiple providers contain the same model alias, SwapLM raises an `AmbiguousModelError` asking for an explicit `provider/model` string.*
-
 #### 3. Virtual Free Provider (`free/model`)
-
-Route automatically to free-tier or open-access providers:
 
 ```python
 response = chat(model="free/qwen3-30b", messages=[...])
@@ -96,93 +104,93 @@ response = chat(model="free/qwen3-30b", messages=[...])
 
 ---
 
-## Public Discovery APIs
+## Code Examples
 
-Inspect registered providers and model capabilities without making network requests:
-
-```python
-import swaplm
-
-# List all registered providers
-for p in swaplm.providers():
-    print(f"Provider: {p.name} ({p.id}) - Base URL: {p.base_url}")
-
-# Inspect a single provider
-groq_info = swaplm.provider("groq")
-print("Supports BYOK:", groq_info.supports_byok)
-
-# Inspect a model's capabilities
-p_info, m_info = swaplm.model("groq/llama-3.3-70b-versatile")
-print(f"Context Window: {m_info.context_window}")
-print(f"Supports Tools: {m_info.supports_tool_calling}")
-
-# Search all models across providers
-for p_info, m_info in swaplm.models():
-    print(f"{p_info.id}/{m_info.id} - Max Tokens: {m_info.max_tokens}")
-```
-
----
-
-## Examples
-
-### Basic Completion
+### Multi-Provider Completion
 
 ```python
 from swaplm import chat
 
-response = chat(
-    model="groq/llama-3.3-70b-versatile",
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": "What is the capital of France?"},
-    ],
+# Anthropic
+res_claude = chat(
+    model="anthropic/claude-3-5-sonnet-20241022",
+    messages=[{"role": "user", "content": "Explain relativity in one sentence."}],
 )
+print("Claude:", res_claude.content)
 
-print(response.content)
+# Google Gemini
+res_gemini = chat(
+    model="google/gemini-2.5-pro",
+    messages=[{"role": "user", "content": "Explain relativity in one sentence."}],
+)
+print("Gemini:", res_gemini.content)
 ```
 
-### Streaming
+### Streaming Across Providers
 
 ```python
 from swaplm import chat
 
 stream = chat(
-    model="groq/llama-3.3-70b-versatile",
-    messages=[{"role": "user", "content": "Write a poem about open source."}],
+    model="anthropic/claude-3-5-sonnet-20241022",
+    messages=[{"role": "user", "content": "Write a short poem."}],
     stream=True,
 )
 
 for chunk in stream:
     if chunk.choices and chunk.choices[0].delta.content:
         print(chunk.choices[0].delta.content, end="", flush=True)
+
+print("\n\nFull text:\n", stream.accumulated_content)
 ```
 
-### Tool Calling
+### Tool Calling Across Providers
 
 ```python
 from swaplm import Tool, chat
 
-weather_tool = Tool.model_validate({
+calculator_tool = Tool.model_validate({
     "type": "function",
     "function": {
-        "name": "get_weather",
-        "description": "Get current weather for a location",
+        "name": "multiply",
+        "description": "Multiply two numbers",
         "parameters": {
             "type": "object",
-            "properties": {"location": {"type": "string"}},
-            "required": ["location"],
+            "properties": {
+                "a": {"type": "number"},
+                "b": {"type": "number"},
+            },
+            "required": ["a", "b"],
         },
     },
 })
 
+# Works identically on Gemini, Claude, or Groq
 response = chat(
-    model="groq/llama-3.3-70b-versatile",
-    messages=[{"role": "user", "content": "Weather in Tokyo?"}],
-    tools=[weather_tool],
+    model="google/gemini-2.5-pro",
+    messages=[{"role": "user", "content": "Calculate 42 * 12"}],
+    tools=[calculator_tool],
 )
 
 if response.tool_calls:
-    print("Tool requested:", response.tool_calls[0].function.name)
+    tc = response.tool_calls[0]
+    print(f"Tool call requested: {tc.function.name}({tc.function.arguments})")
+```
+
+---
+
+## Public Discovery APIs
+
+```python
+import swaplm
+
+# Inspect all providers
+for p in swaplm.providers():
+    print(f"{p.name} ({p.id}) - Base URL: {p.base_url}")
+
+# Inspect model capabilities
+p_info, m_info = swaplm.model("anthropic/claude-3-7-sonnet-20250219")
+print("Supports thinking:", m_info.supports_thinking)
 ```
 
 ---
@@ -194,11 +202,12 @@ if response.tool_calls:
 | **1** | Project foundation & repository structure | ✅ Completed |
 | **2** | Provider architecture & protocol system | ✅ Completed |
 | **3** | First production provider (Groq) & HTTP execution | ✅ Completed |
-| **4** | Core SDK Infrastructure (Routing, Discovery, Config) | ✅ Current |
-| **5** | Additional core providers (OpenAI, Anthropic, Google) | 🔜 Next |
-| **6** | Async support & streaming enhancements | Planned |
-| **7** | Advanced features (fallbacks, retries) | Planned |
-| **8** | Documentation site & v1.0 release | Planned |
+| **4** | Core SDK Infrastructure (Routing, Discovery, Config) | ✅ Completed |
+| **5** | Multi-Protocol Validation (Anthropic & Google Gemini) | ✅ Current |
+| **6** | OpenAI provider & remaining OpenAI-compatible providers | 🔜 Next |
+| **7** | Async support & streaming enhancements | Planned |
+| **8** | Advanced features (fallbacks, retries) | Planned |
+| **9** | Documentation site & v1.0 release | Planned |
 
 ---
 

@@ -10,6 +10,7 @@ from typing import Any
 
 from swaplm.exceptions import (
     AuthenticationError,
+    InvalidModelError,
     ProviderError,
     RateLimitError,
     SwapLMError,
@@ -61,7 +62,6 @@ class AnthropicProtocol(BaseProtocol):
         request: ChatRequest,
         model_info: ModelInfo | None = None,
     ) -> dict[str, Any]:
-        # Anthropic separates system from messages
         system_text: str | None = None
         messages: list[dict[str, Any]] = []
         for m in request.messages:
@@ -74,24 +74,33 @@ class AnthropicProtocol(BaseProtocol):
             "model": request.model_id,
             "messages": messages,
         }
-        if system_text:
+        if system_text and (model_info is None or model_info.supports_system_message):
             body["system"] = system_text
+
         if request.max_tokens is not None:
             body["max_tokens"] = request.max_tokens
+        elif model_info and model_info.default_max_tokens:
+            body["max_tokens"] = model_info.default_max_tokens
         else:
-            # Anthropic requires max_tokens
             body["max_tokens"] = 4096
+
         if request.stream:
             body["stream"] = True
-        if request.temperature is not None:
+
+        if (
+            model_info is None or model_info.supports_temperature
+        ) and request.temperature is not None:
             body["temperature"] = request.temperature
+
         if request.top_p is not None:
             body["top_p"] = request.top_p
+
         if request.stop is not None:
             body["stop_sequences"] = (
                 request.stop if isinstance(request.stop, list) else [request.stop]
             )
-        if request.tools:
+
+        if (model_info is None or model_info.supports_tool_calling) and request.tools:
             body["tools"] = [
                 {
                     "name": t.function.name,
@@ -100,10 +109,15 @@ class AnthropicProtocol(BaseProtocol):
                 }
                 for t in request.tools
             ]
-        if request.tool_choice is not None:
-            body["tool_choice"] = self._translate_tool_choice(request.tool_choice)
+            if request.tool_choice is not None:
+                body["tool_choice"] = self._translate_tool_choice(request.tool_choice)
+
         if request.provider_options:
-            body.update(request.provider_options)
+            opts = dict(request.provider_options)
+            if model_info is not None and not model_info.supports_thinking:
+                opts.pop("thinking", None)
+            body.update(opts)
+
         return body
 
     # ── Response parsing ──────────────────────────────────────────────
@@ -113,7 +127,6 @@ class AnthropicProtocol(BaseProtocol):
         data: dict[str, Any],
         provider_id: str,
     ) -> ChatResponse:
-        # Anthropic returns content as a list of blocks
         content_blocks = data.get("content", [])
         text_parts: list[str] = []
         tool_calls: list[ToolCall] = []
@@ -228,15 +241,19 @@ class AnthropicProtocol(BaseProtocol):
     ) -> SwapLMError:
         error_data = data.get("error", {})
         message = error_data.get("message", "Unknown error")
+        error_type = error_data.get("type", "")
 
-        if status_code == 401:
+        if status_code == 401 or error_type == "authentication_error":
             return AuthenticationError(
                 message, provider=provider, model=model, status_code=status_code
             )
-        if status_code == 429:
+        if status_code == 429 or error_type == "rate_limit_error":
             return RateLimitError(message, provider=provider, model=model, status_code=status_code)
         if status_code == 408:
             return TimeoutError(message, provider=provider, model=model, status_code=status_code)
+        if status_code == 404 or error_type == "not_found_error":
+            return InvalidModelError(message, model=model)
+
         return ProviderError(message, provider=provider, model=model, status_code=status_code)
 
     # ── Internal helpers ──────────────────────────────────────────────
@@ -258,7 +275,7 @@ class AnthropicProtocol(BaseProtocol):
         if isinstance(choice, str):
             mapping: dict[str, dict[str, Any]] = {
                 "auto": {"type": "auto"},
-                "none": {"type": "auto"},  # Anthropic has no "none"
+                "none": {"type": "auto"},
                 "required": {"type": "any"},
             }
             return mapping.get(choice, {"type": "auto"})

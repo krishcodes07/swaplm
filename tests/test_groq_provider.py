@@ -24,7 +24,8 @@ class TestGroqProvider:
         model_ids = [m.id for m in models]
         assert "llama-3.3-70b-versatile" in model_ids
         assert "llama-3.1-8b-instant" in model_ids
-        assert "deepseek-r1-distill-llama-70b" in model_ids
+        assert "qwen/qwen3.6-27b" in model_ids
+        assert "openai/gpt-oss-120b" in model_ids
 
     def test_get_specific_model(self):
         provider = GroqProvider()
@@ -35,11 +36,11 @@ class TestGroqProvider:
         assert model_info.supports_streaming is True
         assert model_info.supports_tool_calling is True
 
-    def test_thinking_model_capabilities(self):
+    def test_compound_model_capabilities(self):
         provider = GroqProvider()
-        model_info = provider.get_model("deepseek-r1-distill-llama-70b")
+        model_info = provider.get_model("groq/compound")
         assert model_info is not None
-        assert model_info.supports_thinking is True
+        assert model_info.supports_tool_calling is True
 
     def test_auto_discovery(self):
         default_provider_registry.auto_discover()
