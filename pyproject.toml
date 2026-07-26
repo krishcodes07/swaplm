@@ -1,0 +1,21 @@
+[project]
+name = "swaplm"
+version = "0.1.0"
+description = "Universal Python SDK for LLM providers."
+readme = "README.md"
+requires-python = ">=3.10"
+
+authors = [
+    {name = "Krish"}
+]
+
+license = {text = "MIT"}
+
+dependencies = [
+    "httpx>=0.28",
+    "pydantic>=2.11"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
