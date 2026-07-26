@@ -47,9 +47,9 @@ class TestRouterParsing:
         _, model_id = router.resolve("fake/org/model-name")
         assert model_id == "org/model-name"
 
-    def test_missing_slash_raises(self):
+    def test_missing_slash_treated_as_alias(self):
         router = _make_router()
-        with pytest.raises(InvalidModelError, match="Expected 'provider/model'"):
+        with pytest.raises(InvalidModelError, match="Model alias 'gpt-5' was not found"):
             router.resolve("gpt-5")
 
     def test_empty_provider_raises(self):

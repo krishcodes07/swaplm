@@ -10,6 +10,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from pydantic import ValidationError
+
+from swaplm.exceptions import RegistryValidationError
 from swaplm.models.model import ModelInfo
 from swaplm.models.provider import ProviderInfo
 
@@ -34,6 +37,9 @@ class BaseProvider:
 
         Reads from ``models.json`` in the same directory as the provider
         module.  Results are cached after the first call.
+
+        Raises:
+            RegistryValidationError: If models.json is invalid JSON or fails ModelInfo schema validation.
         """
         if self._models is not None:
             return self._models
@@ -43,10 +49,34 @@ class BaseProvider:
             self._models = []
             return self._models
 
-        with open(models_path) as f:
-            raw = json.load(f)
+        try:
+            with open(models_path, encoding="utf-8") as f:
+                raw = json.load(f)
+        except Exception as exc:
+            raise RegistryValidationError(
+                f"Failed to parse models.json for provider '{self.info.id}': {exc}",
+                provider_id=self.info.id,
+                details=str(exc),
+            ) from exc
 
-        self._models = [ModelInfo.model_validate(entry) for entry in raw]
+        if not isinstance(raw, list):
+            raise RegistryValidationError(
+                f"Invalid models.json for provider '{self.info.id}': expected a JSON list of model objects.",
+                provider_id=self.info.id,
+            )
+
+        parsed_models: list[ModelInfo] = []
+        for idx, entry in enumerate(raw):
+            try:
+                parsed_models.append(ModelInfo.model_validate(entry))
+            except ValidationError as exc:
+                raise RegistryValidationError(
+                    f"Model validation error in models.json for provider '{self.info.id}' at index {idx}: {exc}",
+                    provider_id=self.info.id,
+                    details=str(exc),
+                ) from exc
+
+        self._models = parsed_models
         return self._models
 
     def get_model(self, model_id: str) -> ModelInfo | None:

@@ -53,6 +53,11 @@ class ProviderRegistry:
         self._ensure_discovered()
         return list(self._providers)
 
+    def list_instances(self) -> list[BaseProvider]:
+        """Return all registered provider instances."""
+        self._ensure_discovered()
+        return list(self._providers.values())
+
     def auto_discover(self) -> None:
         """Scan ``swaplm/providers/*/provider.py`` for ``BaseProvider`` subclasses.
 

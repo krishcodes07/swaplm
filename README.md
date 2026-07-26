@@ -31,20 +31,6 @@ print(response.content)
 
 ---
 
-## Vision
-
-LLM providers each ship their own SDK with different conventions, authentication flows, and response formats. Switching between providers — or supporting multiple — means rewriting integration code, handling edge cases per-vendor, and managing a growing dependency tree.
-
-SwapLM eliminates this friction. A single, consistent API lets you target **any** provider while keeping your application code clean and portable.
-
-## Supported Providers
-
-| Provider | Status | Model Example | Default Env Var |
-|---|---|---|---|
-| **Groq** | ✅ Active | `groq/llama-3.3-70b-versatile` | `GROQ_API_KEY` |
-
----
-
 ## Features
 
 - [x] Project foundation and repository structure
@@ -52,7 +38,10 @@ SwapLM eliminates this friction. A single, consistent API lets you target **any*
 - [x] Groq production provider integration
 - [x] HTTP execution engine (`httpx`)
 - [x] Server-Sent Events (SSE) streaming support
-- [x] Model capability registry
+- [x] Model capability registry & automatic parameter omission
+- [x] Advanced router: model aliases, ambiguity detection, `free/` provider routing
+- [x] Public provider & model discovery APIs (`providers()`, `models()`, `provider()`, `model()`)
+- [x] Global configuration system (`configure()`)
 - [x] Automatic API key management
 - [x] Tool / Function calling support
 - [x] Unified exception hierarchy
@@ -62,35 +51,81 @@ SwapLM eliminates this friction. A single, consistent API lets you target **any*
 
 ---
 
-## Quickstart
+## Usage Guide
 
-### Installation
+### Global Configuration
 
-```bash
-pip install swaplm
-```
-
-### Authentication
-
-Set the API key via environment variable:
-
-```bash
-export GROQ_API_KEY="gsk_..."
-```
-
-Or pass `api_key` explicitly:
+Set SDK-wide default options across all `chat()` calls:
 
 ```python
-from swaplm import chat
+from swaplm import configure
 
-response = chat(
-    model="groq/llama-3.3-70b-versatile",
-    messages=[{"role": "user", "content": "Explain quantum computing in one sentence."}],
-    api_key="gsk_...",
+configure(
+    timeout=45.0,
+    retries=3,
+    max_tokens=4096,
+    temperature=0.7,
 )
 ```
 
-### Basic Chat Completion
+### Advanced Model Routing
+
+#### 1. Explicit Model String (`provider/model`)
+
+```python
+response = chat(model="groq/llama-3.3-70b-versatile", messages=[...])
+```
+
+#### 2. Alias Resolution
+
+If a model alias uniquely exists in a registered provider, specify the alias directly:
+
+```python
+response = chat(model="llama-3.3-70b-versatile", messages=[...])
+```
+
+*If multiple providers contain the same model alias, SwapLM raises an `AmbiguousModelError` asking for an explicit `provider/model` string.*
+
+#### 3. Virtual Free Provider (`free/model`)
+
+Route automatically to free-tier or open-access providers:
+
+```python
+response = chat(model="free/qwen3-30b", messages=[...])
+```
+
+---
+
+## Public Discovery APIs
+
+Inspect registered providers and model capabilities without making network requests:
+
+```python
+import swaplm
+
+# List all registered providers
+for p in swaplm.providers():
+    print(f"Provider: {p.name} ({p.id}) - Base URL: {p.base_url}")
+
+# Inspect a single provider
+groq_info = swaplm.provider("groq")
+print("Supports BYOK:", groq_info.supports_byok)
+
+# Inspect a model's capabilities
+p_info, m_info = swaplm.model("groq/llama-3.3-70b-versatile")
+print(f"Context Window: {m_info.context_window}")
+print(f"Supports Tools: {m_info.supports_tool_calling}")
+
+# Search all models across providers
+for p_info, m_info in swaplm.models():
+    print(f"{p_info.id}/{m_info.id} - Max Tokens: {m_info.max_tokens}")
+```
+
+---
+
+## Examples
+
+### Basic Completion
 
 ```python
 from swaplm import chat
@@ -101,64 +136,53 @@ response = chat(
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "What is the capital of France?"},
     ],
-    temperature=0.7,
-    max_tokens=100,
 )
 
 print(response.content)
-print(f"Tokens used: {response.usage.total_tokens}")
 ```
 
-### Streaming Responses
+### Streaming
 
 ```python
 from swaplm import chat
 
 stream = chat(
     model="groq/llama-3.3-70b-versatile",
-    messages=[{"role": "user", "content": "Write a short poem about code."}],
+    messages=[{"role": "user", "content": "Write a poem about open source."}],
     stream=True,
 )
 
 for chunk in stream:
     if chunk.choices and chunk.choices[0].delta.content:
         print(chunk.choices[0].delta.content, end="", flush=True)
-
-# Full accumulated content is also accessible:
-print("\n\nFull Poem:\n", stream.accumulated_content)
 ```
 
-### Tool / Function Calling
+### Tool Calling
 
 ```python
 from swaplm import Tool, chat
 
-weather_tool = Tool.model_validate(
-    {
-        "type": "function",
-        "function": {
-            "name": "get_weather",
-            "description": "Get current weather for a location",
-            "parameters": {
-                "type": "object",
-                "properties": {"location": {"type": "string", "description": "City name"}},
-                "required": ["location"],
-            },
+weather_tool = Tool.model_validate({
+    "type": "function",
+    "function": {
+        "name": "get_weather",
+        "description": "Get current weather for a location",
+        "parameters": {
+            "type": "object",
+            "properties": {"location": {"type": "string"}},
+            "required": ["location"],
         },
-    }
-)
+    },
+})
 
 response = chat(
     model="groq/llama-3.3-70b-versatile",
-    messages=[{"role": "user", "content": "What's the weather in Tokyo?"}],
+    messages=[{"role": "user", "content": "Weather in Tokyo?"}],
     tools=[weather_tool],
-    tool_choice="auto",
 )
 
 if response.tool_calls:
-    tool_call = response.tool_calls[0]
-    print(f"Model requested tool: {tool_call.function.name}")
-    print(f"Arguments: {tool_call.function.arguments}")
+    print("Tool requested:", response.tool_calls[0].function.name)
 ```
 
 ---
@@ -169,49 +193,22 @@ if response.tool_calls:
 |---|---|---|
 | **1** | Project foundation & repository structure | ✅ Completed |
 | **2** | Provider architecture & protocol system | ✅ Completed |
-| **3** | First production provider (Groq) & HTTP execution | ✅ Current |
-| **4** | Additional core providers (OpenAI, Anthropic, Google) | 🔜 Next |
-| **5** | Async support & streaming enhancements | Planned |
-| **6** | Model registry & intelligent routing | Planned |
+| **3** | First production provider (Groq) & HTTP execution | ✅ Completed |
+| **4** | Core SDK Infrastructure (Routing, Discovery, Config) | ✅ Current |
+| **5** | Additional core providers (OpenAI, Anthropic, Google) | 🔜 Next |
+| **6** | Async support & streaming enhancements | Planned |
 | **7** | Advanced features (fallbacks, retries) | Planned |
 | **8** | Documentation site & v1.0 release | Planned |
 
 ---
 
-## Architecture
-
-```
-┌──────────────────────────────────────────────┐
-│              Public API (chat)               │
-├──────────────────────────────────────────────┤
-│                   Router                     │
-│         Resolves model → provider            │
-├──────────────────────────────────────────────┤
-│                 Protocols                    │
-│    OpenAI-compat · Anthropic · Google        │
-├──────────────────────────────────────────────┤
-│                 Providers                    │
-│                Groq · ...                    │
-├──────────────────────────────────────────────┤
-│             HTTP Transport (httpx)           │
-├──────────────────────────────────────────────┤
-│              Auth · Models · Utils           │
-└──────────────────────────────────────────────┘
-```
-
----
-
 ## Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) before submitting a pull request.
-
 ```bash
-# Clone and set up
 git clone https://github.com/krishcodes07/swaplm.git
 cd swaplm
 pip install -e ".[dev]"
 
-# Run checks
 ruff check .
 ruff format .
 pytest
@@ -220,9 +217,3 @@ pytest
 ## License
 
 SwapLM is released under the [MIT License](LICENSE).
-
----
-
-<p align="center">
-  Built with care by <a href="https://github.com/krishcodes07">Krish</a> and contributors.
-</p>

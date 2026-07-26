@@ -58,7 +58,7 @@ class TimeoutError(ProviderError):
 
 
 # ---------------------------------------------------------------------------
-# Configuration / validation errors
+# Configuration / validation / routing errors
 # ---------------------------------------------------------------------------
 
 
@@ -68,6 +68,26 @@ class InvalidModelError(SwapLMError):
     def __init__(self, message: str = "", *, model: str | None = None) -> None:
         self.model = model
         super().__init__(message)
+
+
+class AmbiguousModelError(InvalidModelError):
+    """Multiple providers contain the requested model alias."""
+
+    def __init__(
+        self,
+        message: str = "",
+        *,
+        model: str | None = None,
+        matching_providers: list[str] | None = None,
+    ) -> None:
+        self.matching_providers = matching_providers or []
+        if not message and model and self.matching_providers:
+            providers_str = ", ".join(self.matching_providers)
+            message = (
+                f"Model alias '{model}' is ambiguous and matches multiple providers: {providers_str}. "
+                f"Please specify explicit 'provider/model' (e.g. '{self.matching_providers[0]}/{model}')."
+            )
+        super().__init__(message, model=model)
 
 
 class InvalidProviderError(SwapLMError):
@@ -80,6 +100,36 @@ class InvalidProviderError(SwapLMError):
 
 class ConfigurationError(SwapLMError):
     """SDK or provider configuration is invalid."""
+
+
+class RegistryValidationError(ConfigurationError):
+    """Validation error when parsing a provider's models.json."""
+
+    def __init__(
+        self,
+        message: str = "",
+        *,
+        provider_id: str | None = None,
+        details: str | None = None,
+    ) -> None:
+        self.provider_id = provider_id
+        self.details = details
+        super().__init__(message)
+
+
+class ModelCapabilityError(SwapLMError):
+    """Requested operation is not supported by the model's capabilities."""
+
+    def __init__(
+        self,
+        message: str = "",
+        *,
+        model: str | None = None,
+        capability: str | None = None,
+    ) -> None:
+        self.model = model
+        self.capability = capability
+        super().__init__(message)
 
 
 class ToolCallError(SwapLMError):

@@ -18,6 +18,7 @@ from swaplm.exceptions import (
     TimeoutError,
 )
 from swaplm.models.messages import FunctionCall, Message, ToolCall
+from swaplm.models.model import ModelInfo
 from swaplm.models.provider import ProviderInfo
 from swaplm.models.request import ChatRequest
 from swaplm.models.response import ChatResponse, Choice, Usage
@@ -59,6 +60,7 @@ class OpenAIProtocol(BaseProtocol):
     def build_request_body(
         self,
         request: ChatRequest,
+        model_info: ModelInfo | None = None,
     ) -> dict[str, Any]:
         body: dict[str, Any] = {
             "model": request.model_id,
@@ -68,20 +70,32 @@ class OpenAIProtocol(BaseProtocol):
             body["stream"] = True
         if request.max_tokens is not None:
             body["max_tokens"] = request.max_tokens
-        if request.temperature is not None:
+        if (
+            model_info is None or model_info.supports_temperature
+        ) and request.temperature is not None:
             body["temperature"] = request.temperature
         if request.top_p is not None:
             body["top_p"] = request.top_p
         if request.stop is not None:
             body["stop"] = request.stop
-        if request.seed is not None:
+        if (model_info is None or model_info.supports_seed) and request.seed is not None:
             body["seed"] = request.seed
-        if request.tools:
-            body["tools"] = [t.model_dump(exclude_none=True) for t in request.tools]
-        if request.tool_choice is not None:
-            body["tool_choice"] = request.tool_choice
+        if model_info is None or model_info.supports_tool_calling:
+            if request.tools:
+                body["tools"] = [t.model_dump(exclude_none=True) for t in request.tools]
+            if request.tool_choice is not None:
+                body["tool_choice"] = request.tool_choice
+
         if request.provider_options:
-            body.update(request.provider_options)
+            opts = dict(request.provider_options)
+            if model_info is not None:
+                if not model_info.supports_thinking:
+                    opts.pop("thinking", None)
+                if not model_info.supports_reasoning_effort:
+                    opts.pop("reasoning_effort", None)
+                if not model_info.supports_json_mode and not model_info.supports_structured_output:
+                    opts.pop("response_format", None)
+            body.update(opts)
         return body
 
     # ── Response parsing ──────────────────────────────────────────────

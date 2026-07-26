@@ -1,18 +1,20 @@
 """Model string resolution and provider routing.
 
-Parses ``"provider/model"`` strings, looks up the provider in the
-registry, and validates the model exists.
+Supports:
+1. Explicit ``"provider/model"`` (e.g. ``"groq/llama-3.3-70b-versatile"``)
+2. Virtual ``"free/model"`` (e.g. ``"free/qwen3-30b"``)
+3. Alias lookup (e.g. ``"llama-3.3-70b-versatile"``) with ambiguity detection
 """
 
 from __future__ import annotations
 
-from swaplm.exceptions import InvalidModelError
+from swaplm.exceptions import AmbiguousModelError, InvalidModelError
 from swaplm.providers.base import BaseProvider
 from swaplm.providers.registry import ProviderRegistry, default_provider_registry
 
 
 class Router:
-    """Resolves ``"provider/model"`` strings to provider instances."""
+    """Resolves model strings to provider instances and model IDs."""
 
     def __init__(
         self,
@@ -23,61 +25,110 @@ class Router:
     def resolve(self, model_string: str) -> tuple[BaseProvider, str]:
         """Parse a model string and return the provider + model ID.
 
-        Args:
-            model_string: A string in ``"provider/model"`` format.
+        Resolution Order:
+        1. Explicit ``"provider/model"`` (e.g. ``"groq/llama-3.3-70b-versatile"``)
+        2. Virtual ``"free/model"`` (e.g. ``"free/qwen3-30b"``)
+        3. Alias lookup (e.g. ``"llama-3.3-70b-versatile"``)
 
         Returns:
             A tuple of ``(provider_instance, model_id)``.
 
         Raises:
-            InvalidModelError: If the model string format is invalid
-                or the model is not in the provider's registry.
-            InvalidProviderError: If the provider ID is not registered.
+            AmbiguousModelError: If an alias matches multiple providers.
+            InvalidModelError: If model is not found or format is invalid.
+            InvalidProviderError: If the explicit provider ID is not registered.
         """
-        provider_id, model_id = self._parse_model_string(model_string)
-        provider = self._provider_registry.get(provider_id)
-        self._validate_model(provider, model_id)
-        return provider, model_id
+        if not model_string or not model_string.strip():
+            raise InvalidModelError("Model string cannot be empty.", model=model_string)
 
-    # ── Internal helpers ──────────────────────────────────────────────
+        model_string = model_string.strip()
 
-    @staticmethod
-    def _parse_model_string(model_string: str) -> tuple[str, str]:
-        """Split ``"provider/model"`` into its components.
+        # ── 1 & 2. Explicit or Virtual Provider ─────────────────────
+        if "/" in model_string:
+            provider_id, model_id = model_string.split("/", 1)
+            if not provider_id or not model_id:
+                raise InvalidModelError(
+                    f"Invalid model format: '{model_string}'. Both provider and model must be non-empty.",
+                    model=model_string,
+                )
 
-        Raises:
-            InvalidModelError: If the string is not in the expected format.
-        """
-        if "/" not in model_string:
+            # Virtual free provider
+            if provider_id.lower() == "free":
+                return self._resolve_free_provider(model_id)
+
+            # Explicit provider
+            provider = self._provider_registry.get(provider_id)
+            self._validate_model(provider, model_id)
+            return provider, model_id
+
+        # ── 3. Alias Lookup ─────────────────────────────────────────
+        return self._resolve_alias(model_string)
+
+    def _resolve_free_provider(self, model_id: str) -> tuple[BaseProvider, str]:
+        """Search all registered providers for a free provider matching model_id."""
+        registered_ids = self._provider_registry.list_providers()
+        free_matches: list[BaseProvider] = []
+
+        for p_id in registered_ids:
+            provider = self._provider_registry.get(p_id)
+            if (provider.info.is_free or not provider.info.requires_api_key) and provider.get_model(
+                model_id
+            ) is not None:
+                free_matches.append(provider)
+
+        if not free_matches:
+            # Fallback check: any free provider without models.json (pass-through)
+            for p_id in registered_ids:
+                provider = self._provider_registry.get(p_id)
+                if (
+                    provider.info.is_free or not provider.info.requires_api_key
+                ) and not provider.get_models():
+                    return provider, model_id
+
             raise InvalidModelError(
-                f"Invalid model format: '{model_string}'. "
-                "Expected 'provider/model' (e.g. 'openai/gpt-5').",
-                model=model_string,
+                f"No free provider found exposing model '{model_id}'.",
+                model=model_id,
             )
-        provider_id, model_id = model_string.split("/", 1)
-        if not provider_id or not model_id:
-            raise InvalidModelError(
-                f"Invalid model format: '{model_string}'. "
-                "Both provider and model must be non-empty.",
-                model=model_string,
+
+        return free_matches[0], model_id
+
+    def _resolve_alias(self, alias: str) -> tuple[BaseProvider, str]:
+        """Search all registered providers for a model alias."""
+        registered_ids = self._provider_registry.list_providers()
+        matching_providers: list[BaseProvider] = []
+
+        for p_id in registered_ids:
+            provider = self._provider_registry.get(p_id)
+            if provider.get_model(alias) is not None:
+                matching_providers.append(provider)
+
+        if len(matching_providers) == 1:
+            return matching_providers[0], alias
+
+        if len(matching_providers) > 1:
+            provider_slugs = [p.info.id for p in matching_providers]
+            raise AmbiguousModelError(
+                model=alias,
+                matching_providers=provider_slugs,
             )
-        return provider_id, model_id
+
+        raise InvalidModelError(
+            f"Model alias '{alias}' was not found in any registered provider.",
+            model=alias,
+        )
 
     @staticmethod
     def _validate_model(provider: BaseProvider, model_id: str) -> None:
         """Check the model exists in the provider's model list.
 
         Skips validation if the provider has no ``models.json`` registered.
-        This allows pass-through for providers that accept arbitrary models.
         """
         models = provider.get_models()
         if not models:
-            # No model list → accept anything (pass-through)
             return
         if provider.get_model(model_id) is None:
             available = ", ".join(m.id for m in models[:10])
             raise InvalidModelError(
-                f"Model '{model_id}' not found for provider '{provider.info.id}'. "
-                f"Available models: {available}",
+                f"Model '{model_id}' not found for provider '{provider.info.id}'. Available models: {available}",
                 model=model_id,
             )

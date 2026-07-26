@@ -16,6 +16,7 @@ from swaplm.exceptions import (
     TimeoutError,
 )
 from swaplm.models.messages import FunctionCall, Message, ToolCall
+from swaplm.models.model import ModelInfo
 from swaplm.models.provider import ProviderInfo
 from swaplm.models.request import ChatRequest
 from swaplm.models.response import ChatResponse, Choice, Usage
@@ -58,6 +59,7 @@ class AnthropicProtocol(BaseProtocol):
     def build_request_body(
         self,
         request: ChatRequest,
+        model_info: ModelInfo | None = None,
     ) -> dict[str, Any]:
         # Anthropic separates system from messages
         system_text: str | None = None

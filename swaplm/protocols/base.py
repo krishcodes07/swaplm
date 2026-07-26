@@ -13,6 +13,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from swaplm.exceptions import SwapLMError
+from swaplm.models.model import ModelInfo
 from swaplm.models.provider import ProviderInfo
 from swaplm.models.request import ChatRequest
 from swaplm.models.response import ChatResponse
@@ -54,6 +55,7 @@ class BaseProtocol(ABC):
     def build_request_body(
         self,
         request: ChatRequest,
+        model_info: ModelInfo | None = None,
     ) -> dict[str, Any]:
         """Translate a ``ChatRequest`` into the provider's JSON body."""
 

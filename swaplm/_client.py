@@ -11,6 +11,7 @@ from collections.abc import Iterator
 from typing import Any
 
 from swaplm.auth.manager import AuthManager
+from swaplm.config import get_config
 from swaplm.models.request import ChatRequest
 from swaplm.models.response import ChatResponse
 from swaplm.protocols.registry import default_protocol_registry
@@ -37,39 +38,43 @@ class _Client:
         """Execute a chat completion request.
 
         Pipeline:
-            1. Route ``model`` → provider + model_id
-            2. Resolve API key
-            3. Look up protocol
-            4. Build HTTP request (url, headers, body)
-            5. Execute HTTP call via HTTP transport
-            6. Parse response → ``ChatResponse`` or ``StreamResponse``
-
-        Returns:
-            ``ChatResponse`` for non-streaming, ``StreamResponse`` for streaming.
-
-        Raises:
-            InvalidModelError: Bad model string or model not found.
-            InvalidProviderError: Provider not registered.
-            AuthenticationError: API key missing or invalid.
-            RateLimitError: Provider rate limit exceeded.
-            TimeoutError: Request timed out.
-            ProviderError: General provider failure.
+            1. Apply global configuration defaults
+            2. Route ``model`` → provider + model_id
+            3. Resolve API key
+            4. Look up protocol
+            5. Build HTTP request (url, headers, body with capability filtering)
+            6. Execute HTTP call via HTTP transport
+            7. Parse response → ``ChatResponse`` or ``StreamResponse``
         """
-        # 1. Resolve provider
+        # 1. Apply global config defaults for unset parameters
+        cfg = get_config()
+        if request.timeout is None and cfg.timeout is not None:
+            request.timeout = cfg.timeout
+        if request.retries == 0 and cfg.retries != 0:
+            request.retries = cfg.retries
+        if request.max_tokens is None and cfg.max_tokens is not None:
+            request.max_tokens = cfg.max_tokens
+        if request.temperature is None and cfg.temperature is not None:
+            request.temperature = cfg.temperature
+        if request.top_p is None and cfg.top_p is not None:
+            request.top_p = cfg.top_p
+
+        # 2. Resolve provider
         provider, model_id = self._router.resolve(request.model)
 
-        # 2. Resolve API key
+        # 3. Resolve API key
         api_key = self._auth.resolve_api_key(provider, request.api_key)
 
-        # 3. Get protocol
+        # 4. Get protocol & model info
         protocol = default_protocol_registry.get(provider.info.protocol)
+        model_info = provider.get_model(model_id)
 
-        # 4. Build request components
+        # 5. Build request components (with capability filtering)
         url = protocol.build_request_url(request, provider.info)
         headers = protocol.build_request_headers(request, provider.info, api_key)
-        body = protocol.build_request_body(request)
+        body = protocol.build_request_body(request, model_info=model_info)
 
-        # 5. Execute HTTP request
+        # 6. Execute HTTP request
         if request.stream:
             raw_stream = self._http.post_stream(
                 url,

@@ -7,7 +7,7 @@ Public API
     from swaplm import chat
 
     response = chat(
-        model="openai/gpt-5",
+        model="groq/llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": "Hello!"}],
     )
     print(response.content)
@@ -17,18 +17,25 @@ from __future__ import annotations
 
 from typing import Any
 
+from swaplm.config import SDKConfig, configure, get_config, reset_config
+from swaplm.discovery import model, models, provider, providers
 from swaplm.exceptions import (
+    AmbiguousModelError,
     AuthenticationError,
     ConfigurationError,
     InvalidModelError,
     InvalidProviderError,
+    ModelCapabilityError,
     ProviderError,
     RateLimitError,
+    RegistryValidationError,
     SwapLMError,
     TimeoutError,
     ToolCallError,
 )
 from swaplm.models.messages import Message, Tool
+from swaplm.models.model import ModelInfo
+from swaplm.models.provider import ProviderInfo
 from swaplm.models.request import ChatRequest
 from swaplm.models.response import ChatResponse
 from swaplm.models.stream import StreamChunk
@@ -58,7 +65,7 @@ def chat(
     """Send a chat completion request to any LLM provider.
 
     Args:
-        model: Model identifier in ``"provider/model"`` format.
+        model: Model identifier in ``"provider/model"``, ``"free/model"``, or alias format.
         messages: Conversation messages (dicts or ``Message`` objects).
         stream: Whether to stream the response.
         api_key: Explicit API key (overrides env var).
@@ -78,34 +85,13 @@ def chat(
     Returns:
         ``ChatResponse`` for non-streaming requests, or
         ``StreamResponse`` for streaming requests.
-
-    Raises:
-        InvalidModelError: If the model string is malformed.
-        InvalidProviderError: If the provider is not registered.
-        AuthenticationError: If no API key is available.
-        ProviderError: If the provider returns an error.
-
-    Example::
-
-        from swaplm import chat
-
-        response = chat(
-            model="openai/gpt-5",
-            messages=[
-                {"role": "system", "content": "You are helpful."},
-                {"role": "user", "content": "Hello!"},
-            ],
-        )
-        print(response.content)
     """
     from swaplm._client import _default_client
 
-    # Normalise message dicts to Message objects
     normalised_messages = [
         Message.model_validate(m) if isinstance(m, dict) else m for m in messages
     ]
 
-    # Normalise tool dicts to Tool objects
     normalised_tools = None
     if tools:
         normalised_tools = [Tool.model_validate(t) if isinstance(t, dict) else t for t in tools]
@@ -134,16 +120,23 @@ def chat(
 
 __all__ = [
     # Exceptions
+    "AmbiguousModelError",
     "AuthenticationError",
-    # Models (re-exported for convenience)
+    # Models
     "ChatRequest",
     "ChatResponse",
     "ConfigurationError",
     "InvalidModelError",
     "InvalidProviderError",
     "Message",
+    "ModelCapabilityError",
+    "ModelInfo",
     "ProviderError",
+    "ProviderInfo",
     "RateLimitError",
+    "RegistryValidationError",
+    # Configuration
+    "SDKConfig",
     "StreamChunk",
     "StreamResponse",
     "SwapLMError",
@@ -154,4 +147,12 @@ __all__ = [
     "__version__",
     # Public API
     "chat",
+    "configure",
+    "get_config",
+    # Discovery
+    "model",
+    "models",
+    "provider",
+    "providers",
+    "reset_config",
 ]
