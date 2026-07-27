@@ -16,7 +16,7 @@ from swaplm.exceptions import (
     SwapLMError,
     TimeoutError,
 )
-from swaplm.models.messages import FunctionCall, Message, ToolCall
+from swaplm.models.messages import FunctionCall, FunctionCallDelta, Message, ToolCall, ToolCallDelta
 from swaplm.models.model import ModelInfo
 from swaplm.models.provider import ProviderInfo
 from swaplm.models.request import ChatRequest
@@ -184,19 +184,76 @@ class AnthropicProtocol(BaseProtocol):
         if not event_type:
             return None
 
-        if event_type == "content_block_delta":
-            delta_data = data.get("delta", {})
-            content = delta_data.get("text")
-            if content is not None:
+        if event_type == "content_block_start":
+            block = data.get("content_block", {})
+
+            # Tool use block start — emit tool call with id and function name
+            if block.get("type") == "tool_use":
                 return StreamChunk(
                     choices=[
                         ChunkChoice(
                             index=data.get("index", 0),
-                            delta=ChoiceDelta(content=content),
+                            delta=ChoiceDelta(
+                                tool_calls=[
+                                    ToolCallDelta(
+                                        index=data.get("index", 0),
+                                        id=block.get("id"),
+                                        type="function",
+                                        function=FunctionCallDelta(
+                                            name=block.get("name"),
+                                        ),
+                                    )
+                                ],
+                            ),
                         )
                     ],
                     provider=provider_id,
                 )
+
+            # Text block start — no content yet, skip
+            return None
+
+        if event_type == "content_block_delta":
+            delta_data = data.get("delta", {})
+            delta_type = delta_data.get("type")
+
+            # Text delta
+            if delta_type == "text_delta":
+                content = delta_data.get("text")
+                if content is not None:
+                    return StreamChunk(
+                        choices=[
+                            ChunkChoice(
+                                index=data.get("index", 0),
+                                delta=ChoiceDelta(content=content),
+                            )
+                        ],
+                        provider=provider_id,
+                    )
+
+            # Tool use argument delta
+            if delta_type == "input_json_delta":
+                partial_json = delta_data.get("partial_json", "")
+                return StreamChunk(
+                    choices=[
+                        ChunkChoice(
+                            index=data.get("index", 0),
+                            delta=ChoiceDelta(
+                                tool_calls=[
+                                    ToolCallDelta(
+                                        index=data.get("index", 0),
+                                        function=FunctionCallDelta(
+                                            arguments=partial_json,
+                                        ),
+                                    )
+                                ],
+                            ),
+                        )
+                    ],
+                    provider=provider_id,
+                )
+
+            return None
 
         if event_type == "message_delta":
             delta_data = data.get("delta", {})

@@ -22,11 +22,11 @@ class _TestProvider(BaseProvider):
 
 class _NoKeyProvider(BaseProvider):
     info = ProviderInfo(
-        id="free",
-        name="Free Provider",
+        id="nokey",
+        name="No-Key Provider",
         protocol="openai",
-        base_url="https://api.free.com",
-        env_var="FREE_API_KEY",
+        base_url="https://api.nokey.com",
+        env_var="NOKEY_API_KEY",
         requires_api_key=False,
     )
 

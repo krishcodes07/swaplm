@@ -42,9 +42,6 @@ class ProviderInfo(BaseModel):
     supports_byok: bool = True
     """Whether the provider supports Bring Your Own Key."""
 
-    is_free: bool = False
-    """Whether the provider is a free-tier provider or offers free access."""
-
     supports_streaming: bool = True
     """Whether the provider supports response streaming."""
 

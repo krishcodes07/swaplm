@@ -24,7 +24,7 @@ def main():
         "groq/llama-3.3-70b-versatile",
         "google/gemini-2.0-flash",
         "anthropic/claude-3-5-sonnet-20241022",
-        "free/openrouter/free",
+        "openrouter/inclusionai/ling-3.0-flash:free",
     ]
 
     for model_string in models_to_test:

@@ -85,6 +85,7 @@ class _Client:
                         headers=headers,
                         json=body,
                         timeout=request.timeout,
+                        retries=request.retries,
                     )
                 else:
                     raw_stream = transport.post_stream(
@@ -194,6 +195,7 @@ class _Client:
                         headers=headers,
                         json=body,
                         timeout=request.timeout,
+                        retries=request.retries,
                     )
                 else:
                     # Fallback for sync transports or custom transports
@@ -203,6 +205,7 @@ class _Client:
                         headers=headers,
                         json=body,
                         timeout=request.timeout,
+                        retries=request.retries,
                     )
 
                 processed_async = self._process_async_stream_chunks(

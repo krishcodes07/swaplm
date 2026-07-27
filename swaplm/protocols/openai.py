@@ -17,7 +17,7 @@ from swaplm.exceptions import (
     SwapLMError,
     TimeoutError,
 )
-from swaplm.models.messages import FunctionCall, Message, ToolCall
+from swaplm.models.messages import FunctionCall, FunctionCallDelta, Message, ToolCall, ToolCallDelta
 from swaplm.models.model import ModelInfo
 from swaplm.models.provider import ProviderInfo
 from swaplm.models.request import ChatRequest
@@ -174,9 +174,30 @@ class OpenAIProtocol(BaseProtocol):
         choices: list[ChunkChoice] = []
         for c in data["choices"]:
             delta_data = c.get("delta", {})
+
+            # Parse streamed tool call deltas
+            tool_calls = None
+            if raw_tool_calls := delta_data.get("tool_calls"):
+                tool_calls = [
+                    ToolCallDelta(
+                        index=tc.get("index", 0),
+                        id=tc.get("id"),
+                        type=tc.get("type"),
+                        function=FunctionCallDelta(
+                            name=tc["function"].get("name"),
+                            arguments=tc["function"].get("arguments"),
+                        )
+                        if tc.get("function")
+                        else None,
+                    )
+                    for tc in raw_tool_calls
+                ]
+
             delta = ChoiceDelta(
                 role=delta_data.get("role"),
                 content=delta_data.get("content"),
+                reasoning=delta_data.get("reasoning"),
+                tool_calls=tool_calls,
             )
             choices.append(
                 ChunkChoice(

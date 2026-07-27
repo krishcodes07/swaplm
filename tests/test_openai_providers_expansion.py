@@ -23,6 +23,7 @@ ALL_EXPECTED_PROVIDERS = [
     "cloudflare",
     "perplexity",
     "cohere",
+    "free",
 ]
 
 

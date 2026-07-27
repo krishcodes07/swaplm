@@ -205,44 +205,73 @@ class HTTPTransport(BaseTransport):
         headers: dict[str, str] | None = None,
         json: dict[str, Any] | None = None,
         timeout: float | None = None,
+        retries: int = 0,
+        retry_delay: float = 0.5,
     ) -> Iterator[dict[str, Any]]:
         client = self._get_client()
         req_timeout = timeout if timeout is not None else self.default_timeout
+        attempt = 0
+        current_delay = retry_delay
 
-        try:
-            with client.stream(
-                method,
-                url,
-                headers=headers,
-                json=json,
-                timeout=req_timeout,
-            ) as response:
-                if response.status_code >= 400:
-                    try:
-                        data = response.json()
-                    except Exception:
-                        data = {"message": response.text or "Error response"}
-                    yield {"_http_error": True, "status_code": response.status_code, "data": data}
-                    return
+        while True:
+            attempt += 1
+            try:
+                with client.stream(
+                    method,
+                    url,
+                    headers=headers,
+                    json=json,
+                    timeout=req_timeout,
+                ) as response:
+                    if response.status_code >= 400:
+                        # Retry on server errors before any data is yielded
+                        if (
+                            response.status_code >= 500 or response.status_code == 429
+                        ) and attempt <= retries:
+                            emit("before_retry", url, response.status_code, attempt)
+                            time.sleep(current_delay)
+                            emit("after_retry", url, response.status_code, attempt)
+                            current_delay *= 2.0
+                            continue
 
-                for line in response.iter_lines():
-                    line = line.strip()
-                    if not line or line.startswith(":") or line.startswith("event:"):
-                        continue
-                    if line.startswith("data:"):
-                        payload = line[5:].strip()
-                        if payload == "[DONE]":
-                            break
-                        if payload:
-                            try:
-                                yield _json.loads(payload)
-                            except _json.JSONDecodeError:
-                                continue
+                        try:
+                            data = response.json()
+                        except Exception:
+                            data = {"message": response.text or "Error response"}
+                        yield {
+                            "_http_error": True,
+                            "status_code": response.status_code,
+                            "data": data,
+                        }
+                        return
 
-        except httpx.TimeoutException as exc:
-            raise TimeoutError(f"Streaming request to {url} timed out") from exc
-        except httpx.RequestError as exc:
-            raise ProviderError(f"Network error during stream to {url}: {exc}") from exc
+                    for line in response.iter_lines():
+                        line = line.strip()
+                        if not line or line.startswith(":") or line.startswith("event:"):
+                            continue
+                        if line.startswith("data:"):
+                            payload = line[5:].strip()
+                            if payload == "[DONE]":
+                                break
+                            if payload:
+                                try:
+                                    yield _json.loads(payload)
+                                except _json.JSONDecodeError:
+                                    continue
+
+                return  # Stream completed successfully
+
+            except (httpx.TimeoutException, httpx.RequestError) as exc:
+                if attempt <= retries:
+                    emit("before_retry", url, exc, attempt)
+                    time.sleep(current_delay)
+                    emit("after_retry", url, exc, attempt)
+                    current_delay *= 2.0
+                    continue
+
+                if isinstance(exc, httpx.TimeoutException):
+                    raise TimeoutError(f"Streaming request to {url} timed out") from exc
+                raise ProviderError(f"Network error during stream to {url}: {exc}") from exc
 
     async def asend_stream(
         self,
@@ -252,44 +281,73 @@ class HTTPTransport(BaseTransport):
         headers: dict[str, str] | None = None,
         json: dict[str, Any] | None = None,
         timeout: float | None = None,
+        retries: int = 0,
+        retry_delay: float = 0.5,
     ) -> AsyncIterator[dict[str, Any]]:
         async_client = self._get_async_client()
         req_timeout = timeout if timeout is not None else self.default_timeout
+        attempt = 0
+        current_delay = retry_delay
 
-        try:
-            async with async_client.stream(
-                method,
-                url,
-                headers=headers,
-                json=json,
-                timeout=req_timeout,
-            ) as response:
-                if response.status_code >= 400:
-                    try:
-                        data = response.json()
-                    except Exception:
-                        data = {"message": response.text or "Error response"}
-                    yield {"_http_error": True, "status_code": response.status_code, "data": data}
-                    return
+        while True:
+            attempt += 1
+            try:
+                async with async_client.stream(
+                    method,
+                    url,
+                    headers=headers,
+                    json=json,
+                    timeout=req_timeout,
+                ) as response:
+                    if response.status_code >= 400:
+                        # Retry on server errors before any data is yielded
+                        if (
+                            response.status_code >= 500 or response.status_code == 429
+                        ) and attempt <= retries:
+                            await aemit("before_retry", url, response.status_code, attempt)
+                            await asyncio.sleep(current_delay)
+                            await aemit("after_retry", url, response.status_code, attempt)
+                            current_delay *= 2.0
+                            continue
 
-                async for line in response.aiter_lines():
-                    line = line.strip()
-                    if not line or line.startswith(":") or line.startswith("event:"):
-                        continue
-                    if line.startswith("data:"):
-                        payload = line[5:].strip()
-                        if payload == "[DONE]":
-                            break
-                        if payload:
-                            try:
-                                yield _json.loads(payload)
-                            except _json.JSONDecodeError:
-                                continue
+                        try:
+                            data = response.json()
+                        except Exception:
+                            data = {"message": response.text or "Error response"}
+                        yield {
+                            "_http_error": True,
+                            "status_code": response.status_code,
+                            "data": data,
+                        }
+                        return
 
-        except httpx.TimeoutException as exc:
-            raise TimeoutError(f"Streaming request to {url} timed out") from exc
-        except httpx.RequestError as exc:
-            raise ProviderError(f"Network error during stream to {url}: {exc}") from exc
+                    async for line in response.aiter_lines():
+                        line = line.strip()
+                        if not line or line.startswith(":") or line.startswith("event:"):
+                            continue
+                        if line.startswith("data:"):
+                            payload = line[5:].strip()
+                            if payload == "[DONE]":
+                                break
+                            if payload:
+                                try:
+                                    yield _json.loads(payload)
+                                except _json.JSONDecodeError:
+                                    continue
+
+                return  # Stream completed successfully
+
+            except (httpx.TimeoutException, httpx.RequestError) as exc:
+                if attempt <= retries:
+                    await aemit("before_retry", url, exc, attempt)
+                    await asyncio.sleep(current_delay)
+                    await aemit("after_retry", url, exc, attempt)
+                    current_delay *= 2.0
+                    continue
+
+                if isinstance(exc, httpx.TimeoutException):
+                    raise TimeoutError(f"Streaming request to {url} timed out") from exc
+                raise ProviderError(f"Network error during stream to {url}: {exc}") from exc
 
     def close(self) -> None:
         if self._client is not None and not self._client.is_closed:

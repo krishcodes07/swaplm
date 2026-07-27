@@ -31,6 +31,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from swaplm.client import AsyncClient, Client
 from swaplm.config import SDKConfig, configure, get_config, reset_config
 from swaplm.discovery import model, models, provider, providers
 from swaplm.exceptions import (
@@ -180,11 +181,13 @@ async def achat(
 
 __all__ = [
     "AmbiguousModelError",
+    "AsyncClient",
     "AuthenticationError",
     "BaseMiddleware",
     "BaseTransport",
     "ChatRequest",
     "ChatResponse",
+    "Client",
     "ConfigurationError",
     "InvalidModelError",
     "InvalidProviderError",

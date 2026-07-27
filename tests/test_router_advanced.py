@@ -1,4 +1,4 @@
-"""Tests for advanced router resolution: aliases, ambiguity detection, and free/ provider."""
+"""Tests for advanced router resolution: aliases and ambiguity detection."""
 
 import pytest
 
@@ -14,7 +14,6 @@ class _MockProvider(BaseProvider):
     def __init__(
         self,
         p_id: str,
-        is_free: bool = False,
         requires_api_key: bool = True,
         models: list[ModelInfo] | None = None,
     ):
@@ -24,7 +23,6 @@ class _MockProvider(BaseProvider):
             protocol="openai",
             base_url=f"https://api.{p_id}.com",
             env_var=f"{p_id.upper()}_API_KEY",
-            is_free=is_free,
             requires_api_key=requires_api_key,
         )
         self._models = models or []
@@ -73,27 +71,3 @@ class TestAdvancedRouter:
 
         with pytest.raises(InvalidModelError, match="not found in any registered provider"):
             router.resolve("unknown-alias")
-
-    def test_free_provider_routing(self):
-        p1 = _MockProvider("paid1", is_free=False, models=[ModelInfo(id="qwen3-30b")])
-        p2 = _MockProvider("free1", is_free=True, models=[ModelInfo(id="qwen3-30b")])
-        router = _build_router([p1, p2])
-
-        provider, model_id = router.resolve("free/qwen3-30b")
-        assert provider.info.id == "free1"
-        assert model_id == "qwen3-30b"
-
-    def test_free_provider_routing_no_key_required(self):
-        p1 = _MockProvider("nokey", requires_api_key=False, models=[ModelInfo(id="open-model")])
-        router = _build_router([p1])
-
-        provider, model_id = router.resolve("free/open-model")
-        assert provider.info.id == "nokey"
-        assert model_id == "open-model"
-
-    def test_free_provider_not_found_raises(self):
-        p1 = _MockProvider("paid1", is_free=False, models=[ModelInfo(id="paid-model")])
-        router = _build_router([p1])
-
-        with pytest.raises(InvalidModelError, match="No free provider found"):
-            router.resolve("free/paid-model")

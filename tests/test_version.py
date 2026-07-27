@@ -15,3 +15,13 @@ def test_version_format():
     assert len(parts) == 3
     for part in parts:
         assert part.isdigit()
+
+
+def test_py_typed_exists():
+    """Package should include PEP 561 py.typed marker file."""
+    import pathlib
+
+    import swaplm
+
+    pkg_dir = pathlib.Path(swaplm.__file__).parent
+    assert (pkg_dir / "py.typed").exists()

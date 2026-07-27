@@ -17,7 +17,6 @@ class GitHubProvider(BaseProvider):
         website="https://github.com/marketplace/models",
         documentation="https://docs.github.com/en/github-models",
         requires_api_key=True,
-        is_free=True,
         supports_byok=True,
         supports_streaming=True,
         supports_tools=True,

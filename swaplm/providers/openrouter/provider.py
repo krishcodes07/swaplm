@@ -17,7 +17,6 @@ class OpenRouterProvider(BaseProvider):
         website="https://openrouter.ai",
         documentation="https://openrouter.ai/docs",
         requires_api_key=False,
-        is_free=True,
         supports_byok=True,
         supports_streaming=True,
         supports_tools=True,

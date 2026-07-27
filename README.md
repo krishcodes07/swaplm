@@ -125,6 +125,7 @@ print(response.content)
 import asyncio
 from swaplm import achat
 
+
 async def main():
     response = await achat(
         provider="groq",
@@ -132,6 +133,7 @@ async def main():
         messages=[{"role": "user", "content": "Hello!"}],
     )
     print(response.content)
+
 
 asyncio.run(main())
 ```
@@ -185,7 +187,6 @@ chat(model="groq/llama-3.3-70b-versatile")
 | Combined string | `"groq/llama-3.3-70b-versatile"` | Routes directly to the named provider. |
 | Nested model ID | `provider="nvidia", model="deepseek-ai/deepseek-v4-flash"` | Handles model IDs with slashes cleanly. |
 | Alias | `"llama-3.3-70b-versatile"` | Searches all providers. Raises `AmbiguousModelError` if multiple match. |
-| Free tier | `"free/qwen-2.5-72b"` | Searches providers marked as free or requiring no API key. |
 
 ---
 
@@ -205,21 +206,21 @@ response = chat(
 )
 
 # Convenience shortcuts
-response.content          # str | None — text of first choice
-response.tool_calls       # list[ToolCall] | None — tool calls from first choice
-response.finish_reason    # str | None — "stop", "length", "tool_calls", etc.
-response.reasoning        # str | None — reasoning/thinking content (if present)
+response.content  # str | None — text of first choice
+response.tool_calls  # list[ToolCall] | None — tool calls from first choice
+response.finish_reason  # str | None — "stop", "length", "tool_calls", etc.
+response.reasoning  # str | None — reasoning/thinking content (if present)
 
 # Full fields
-response.id               # str — unique response ID
-response.model            # str — model that generated the response
-response.provider         # str — provider slug (e.g., "groq")
-response.choices          # list[Choice] — all choices
-response.usage            # Usage | None — token counts
-response.usage.prompt_tokens     # int
-response.usage.completion_tokens # int
-response.usage.total_tokens      # int
-response.created          # int | None — Unix timestamp
+response.id  # str — unique response ID
+response.model  # str — model that generated the response
+response.provider  # str — provider slug (e.g., "groq")
+response.choices  # list[Choice] — all choices
+response.usage  # Usage | None — token counts
+response.usage.prompt_tokens  # int
+response.usage.completion_tokens  # int
+response.usage.total_tokens  # int
+response.created  # int | None — Unix timestamp
 ```
 
 ### `StreamResponse`
@@ -241,7 +242,7 @@ for chunk in stream:
     print(chunk.content, end="", flush=True)
 
 # Access full text after iteration
-print(stream.text)              # alias for accumulated_content
+print(stream.text)  # alias for accumulated_content
 print(stream.accumulated_content)  # same thing
 ```
 
@@ -382,6 +383,7 @@ print("\n\nFull:", stream.text)
 import asyncio
 from swaplm import achat
 
+
 async def main():
     stream = await achat(
         provider="groq",
@@ -392,6 +394,7 @@ async def main():
 
     async for chunk in stream:
         print(chunk.content, end="", flush=True)
+
 
 asyncio.run(main())
 ```
@@ -406,14 +409,14 @@ Set global defaults that apply to all requests:
 from swaplm import configure, get_config, reset_config
 
 configure(
-    timeout=30.0,         # Request timeout in seconds
-    retries=3,            # Retry on 5xx/429/timeout
-    retry_delay=0.5,      # Initial retry delay (exponential backoff)
-    max_tokens=1024,      # Default max tokens for all requests
-    temperature=0.7,      # Default temperature
-    top_p=0.9,            # Default top_p
-    debug=True,           # Enable debug logging (redacts secrets)
-    logging=True,         # Enable info-level logging
+    timeout=30.0,  # Request timeout in seconds
+    retries=3,  # Retry on 5xx/429/timeout
+    retry_delay=0.5,  # Initial retry delay (exponential backoff)
+    max_tokens=1024,  # Default max tokens for all requests
+    temperature=0.7,  # Default temperature
+    top_p=0.9,  # Default top_p
+    debug=True,  # Enable debug logging (redacts secrets)
+    logging=True,  # Enable info-level logging
 )
 
 # Read current config
@@ -495,7 +498,14 @@ class BaseTransport(ABC):
 Intercept and transform requests and responses in a pipeline:
 
 ```python
-from swaplm import BaseMiddleware, ChatRequest, ChatResponse, add_middleware, chat, reset_middlewares
+from swaplm import (
+    BaseMiddleware,
+    ChatRequest,
+    ChatResponse,
+    add_middleware,
+    chat,
+    reset_middlewares,
+)
 
 
 class LoggingMiddleware(BaseMiddleware):
@@ -538,10 +548,10 @@ reset_middlewares()
 ```python
 from swaplm import add_middleware, remove_middleware, get_middlewares, reset_middlewares
 
-add_middleware(my_middleware)      # Register
-remove_middleware(my_middleware)   # Unregister
-get_middlewares()                  # List all registered
-reset_middlewares()                # Clear all
+add_middleware(my_middleware)  # Register
+remove_middleware(my_middleware)  # Unregister
+get_middlewares()  # List all registered
+reset_middlewares()  # Clear all
 ```
 
 ---
@@ -572,7 +582,7 @@ response = chat(
 )
 
 off("before_request", log_request)  # Unregister
-reset_hooks()                        # Clear all
+reset_hooks()  # Clear all
 ```
 
 ### Available Events
@@ -611,8 +621,8 @@ for provider_info, model_info in all_models:
 
 # Get a specific model's metadata
 provider_info, model_info = swaplm.model("groq/llama-3.3-70b-versatile")
-print(model_info.context_window)       # => 128000
-print(model_info.supports_tool_calling) # => True
+print(model_info.context_window)  # => 128000
+print(model_info.supports_tool_calling)  # => True
 ```
 
 ---
@@ -624,17 +634,17 @@ SwapLM maps all provider-specific errors into a unified exception hierarchy:
 ```python
 from swaplm import chat
 from swaplm.exceptions import (
-    SwapLMError,           # Base — catch everything
-    ProviderError,         # Generic provider error
-    AuthenticationError,   # 401 / invalid API key
-    RateLimitError,        # 429 / rate limited
-    TimeoutError,          # Request timed out
-    InvalidModelError,     # Model not found (404)
-    AmbiguousModelError,   # Alias matches multiple providers
+    SwapLMError,  # Base — catch everything
+    ProviderError,  # Generic provider error
+    AuthenticationError,  # 401 / invalid API key
+    RateLimitError,  # 429 / rate limited
+    TimeoutError,  # Request timed out
+    InvalidModelError,  # Model not found (404)
+    AmbiguousModelError,  # Alias matches multiple providers
     InvalidProviderError,  # Unknown provider slug
-    ConfigurationError,    # SDK configuration issue
+    ConfigurationError,  # SDK configuration issue
     ModelCapabilityError,  # Unsupported operation for model
-    ToolCallError,         # Tool/function calling error
+    ToolCallError,  # Tool/function calling error
 )
 
 try:
@@ -664,11 +674,11 @@ except SwapLMError as e:
 from swaplm import Message
 
 msg = Message(
-    role="user",                   # "system" | "user" | "assistant" | "tool"
-    content="Hello!",              # str | list[dict] | None
-    name="optional_name",         # str | None
-    tool_calls=[...],             # list[ToolCall] | None
-    tool_call_id="call_abc",      # str | None (for role="tool")
+    role="user",  # "system" | "user" | "assistant" | "tool"
+    content="Hello!",  # str | list[dict] | None
+    name="optional_name",  # str | None
+    tool_calls=[...],  # list[ToolCall] | None
+    tool_call_id="call_abc",  # str | None (for role="tool")
 )
 ```
 
@@ -700,7 +710,7 @@ from swaplm import ChatRequest, Message
 request = ChatRequest(
     model="llama-3.3-70b-versatile",
     messages=[Message(role="user", content="Hi")],
-    provider="groq",                   # explicit provider (recommended)
+    provider="groq",  # explicit provider (recommended)
     stream=False,
     max_tokens=1024,
     temperature=0.7,
@@ -720,7 +730,7 @@ request = ChatRequest(
 
 # Computed properties
 request.provider_id  # => "groq"
-request.model_id     # => "llama-3.3-70b-versatile"
+request.model_id  # => "llama-3.3-70b-versatile"
 ```
 
 ### `ModelInfo`
@@ -730,18 +740,18 @@ from swaplm import model
 
 provider_info, model_info = swaplm.model("groq/llama-3.3-70b-versatile")
 
-model_info.id                      # => "llama-3.3-70b-versatile"
-model_info.display_name            # => "LLaMA 3.3 70B"
-model_info.context_window          # => 128000
-model_info.max_tokens              # => 32768
-model_info.supports_streaming      # => True
-model_info.supports_tool_calling   # => True
-model_info.supports_json_mode      # => True
-model_info.supports_thinking       # => True
-model_info.supports_seed           # => False
-model_info.supports_vision         # => False
-model_info.default_temperature     # => None
-model_info.default_max_tokens      # => None
+model_info.id  # => "llama-3.3-70b-versatile"
+model_info.display_name  # => "LLaMA 3.3 70B"
+model_info.context_window  # => 128000
+model_info.max_tokens  # => 32768
+model_info.supports_streaming  # => True
+model_info.supports_tool_calling  # => True
+model_info.supports_json_mode  # => True
+model_info.supports_thinking  # => True
+model_info.supports_seed  # => False
+model_info.supports_vision  # => False
+model_info.default_temperature  # => None
+model_info.default_max_tokens  # => None
 ```
 
 ---
